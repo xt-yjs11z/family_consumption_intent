@@ -28,9 +28,9 @@
   pip install -r requirements.txt
  ```
 
-#### OCR 额外系统依赖（仅 Linux/macOS）
-#### macOS: brew install tesseract
-#### Ubuntu/Debian: sudo apt install tesseract-ocr
+ OCR 额外系统依赖（仅 Linux/macOS）
+ macOS: brew install tesseract
+ Ubuntu/Debian: sudo apt install tesseract-ocr
 
 ### 2. 启动 API 服务
 
