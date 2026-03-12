@@ -610,6 +610,45 @@
         .chat-message br {
             margin-bottom: 4px;
         }
+        
+        /* 聊天中的意图识别卡片 */
+        .chat-intent-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0 16px 40px;
+            max-width: 85%;
+            color: white;
+        }
+        
+        .intent-card-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .intent-card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .intent-card-item {
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+        }
+        
+        .intent-card-item span:first-child {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2px;
+        }
+        
+        .intent-card-item span:last-child {
+            font-weight: 600;
+            color: #ffd700;
+        }
     </style>
 </head>
 <body>
@@ -910,36 +949,20 @@
                     chatReply = data.response || "";
                 }
                 
-                // 构建格式化的回复
-                let formattedReply = "";
-                
-                // 如果有意图识别结果，添加格式化展示
-                if (intentData.intent) {
-                    formattedReply += `🎯 意图识别结果\n`;
-                    formattedReply += `📂 类别：${intentData.category || '-'}\n`;
-                    formattedReply += `🎯 目标：${intentData.target || '-'}\n`;
-                    formattedReply += `🏠 场景：${intentData.scenario || '-'}\n`;
-                    formattedReply += `💰 预算：${intentData.budget || '未提及'}\n`;
-                    formattedReply += `⏰ 时间：${intentData.time || '未提及'}\n`;
-                    formattedReply += `💡 动机：${intentData.motivation || '-'}\n\n`;
-                }
-                
-                // 添加 LLM 回复
-                if (chatReply) {
-                    formattedReply += chatReply;
-                } else if (!intentData.intent) {
-                    formattedReply = "好的，我已经记录了。如果有任何消费相关的话题，我会帮你识别意图的～";
-                }
-                
                 // 移除loading
                 document.getElementById(loadingId)?.remove();
                 
-                // 添加助手回复（支持Markdown）
-                addFormattedMessage(formattedReply, 'assistant');
+                // 添加助手回复
+                addFormattedMessage(chatReply || "好的，我已经记录了～", 'assistant');
+                
+                // 在下方显示意图识别卡片
+                if (intentData.intent) {
+                    addIntentCard(intentData);
+                }
                 
                 // 保存对话历史
                 chatHistory.push({role: 'user', content: message});
-                chatHistory.push({role: 'assistant', content: formattedReply});
+                chatHistory.push({role: 'assistant', content: chatReply || ""});
                 
             } catch (e) {
                 document.getElementById(loadingId)?.remove();
@@ -955,19 +978,31 @@
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = `chat-message ${role}`;
+            div.innerHTML = content.replace(/\n/g, '<br>');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // 在聊天区域显示意图识别结果卡片
+        function addIntentCard(data) {
+            if (!data.intent) return;
             
-            // 简单格式化转换
-            let html = content
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/📂 /g, '<span class="chat-icon">📂</span>')
-                .replace(/🎯 /g, '<span class="chat-icon">🎯</span>')
-                .replace(/🏠 /g, '<span class="chat-icon">🏠</span>')
-                .replace(/💰 /g, '<span class="chat-icon">💰</span>')
-                .replace(/⏰ /g, '<span class="chat-icon">⏰</span>')
-                .replace(/💡 /g, '<span class="chat-icon">💡</span>')
-                .replace(/\n/g, '<br>');
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-intent-card';
             
-            div.innerHTML = html;
+            div.innerHTML = `
+                <div class="intent-card-header">🎯 意图识别</div>
+                <div class="intent-card-grid">
+                    <div class="intent-card-item"><span>📂 类别</span><span>${data.category || '-'}</span></div>
+                    <div class="intent-card-item"><span>🎯 目标</span><span>${data.target || '-'}</span></div>
+                    <div class="intent-card-item"><span>🏠 场景</span><span>${data.scenario || '-'}</span></div>
+                    <div class="intent-card-item"><span>💰 预算</span><span>${data.budget || '未提及'}</span></div>
+                    <div class="intent-card-item"><span>⏰ 时间</span><span>${data.time || '未提及'}</span></div>
+                    <div class="intent-card-item"><span>💡 动机</span><span>${data.motivation || '-'}</span></div>
+                </div>
+            `;
+            
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
