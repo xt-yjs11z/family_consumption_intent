@@ -732,12 +732,22 @@
                             <br><br>有什么可以帮你的？
                         </div>
                     </div>
-                    <!-- 意图识别结果展示区 -->
-                    <div id="chatIntentResult"></div>
                     <div class="chat-input-area">
                         <textarea class="chat-input" id="chatInput" placeholder="输入消息..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
                         <button class="chat-send" id="chatSendBtn" onclick="sendChat()">发送</button>
                     </div>
+                </div>
+                <!-- 意图识别结果展示（和意图识别Tab一样） -->
+                <div class="result" id="chatResult">
+                    <div class="result-title">
+                        识别结果
+                        <span class="intent-tag" id="chatIntentTag"></span>
+                    </div>
+                    <div>置信度：<span id="chatConfidenceText">0%</span></div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="chatConfidenceBar"></div>
+                    </div>
+                    <div class="entities" id="chatEntities"></div>
                 </div>
             </div>
             
@@ -956,9 +966,11 @@
                 // 添加助手回复
                 addFormattedMessage(chatReply || "好的，我已经记录了～", 'assistant');
                 
-                // 在下方显示意图识别卡片
+                // 显示意图识别结果（和意图识别Tab一样）
                 if (intentData.intent) {
-                    addIntentCard(intentData);
+                    displayIntentResult(intentData);
+                } else {
+                    document.getElementById('chatResult').classList.remove('show');
                 }
                 
                 // 保存对话历史
@@ -985,31 +997,81 @@
         }
         
         // 在发送栏下方显示意图识别结果卡片
-        function addIntentCard(data) {
-            if (!data.intent) {
-                document.getElementById('chatIntentResult').innerHTML = '';
-                return;
-            }
+        // 在聊天页面显示意图识别结果（和意图识别Tab一样）
+        function displayIntentResult(data) {
+            const result = document.getElementById('chatResult');
+            result.classList.add('show');
             
-            const container = document.getElementById('chatIntentResult');
-            container.innerHTML = '';
-            const div = document.createElement('div');
-            div.className = 'chat-intent-card';
+            // 意图标签
+            const intentTag = document.getElementById('chatIntentTag');
+            intentTag.textContent = data.intent ? '✅ 有消费意图' : '❌ 无消费意图';
+            intentTag.style.background = data.intent ? 'linear-gradient(135deg, #4caf50, #45a049)' : '#999';
             
-            div.innerHTML = `
-                <div class="intent-card-header">🎯 意图识别</div>
-                <div class="intent-card-grid">
-                    <div class="intent-card-item"><span>📂 类别</span><span>${data.category || '-'}</span></div>
-                    <div class="intent-card-item"><span>🎯 目标</span><span>${data.target || '-'}</span></div>
-                    <div class="intent-card-item"><span>🏠 场景</span><span>${data.scenario || '-'}</span></div>
-                    <div class="intent-card-item"><span>💰 预算</span><span>${data.budget || '未提及'}</span></div>
-                    <div class="intent-card-item"><span>⏰ 时间</span><span>${data.time || '未提及'}</span></div>
-                    <div class="intent-card-item"><span>💡 动机</span><span>${data.motivation || '-'}</span></div>
+            // 置信度
+            const confidence = data.intent ? 85 : 20;
+            document.getElementById('chatConfidenceText').textContent = `${confidence}%`;
+            document.getElementById('chatConfidenceBar').style.width = `${confidence}%`;
+            
+            // 构建卡片展示
+            const entities = document.getElementById('chatEntities');
+            entities.innerHTML = '';
+            
+            let html = `
+                <div class="result-card main-card">
+                    <div class="card-title">🎯 识别结果</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">📂 类别</span>
+                            <span class="card-value highlight">${data.category || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🎯 目标</span>
+                            <span class="card-value highlight">${data.target || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🏠 场景</span>
+                            <span class="card-value">${data.scenario || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">💡 动机</span>
+                            <span class="card-value">${data.motivation || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="card-title">📋 详细信息</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">💰 预算</span>
+                            <span class="card-value">${data.budget || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">⏰ 时间</span>
+                            <span class="card-value">${data.time || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">📍 地点</span>
+                            <span class="card-value">${data.location || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🔧 方式</span>
+                            <span class="card-value">${data.method === 'llm' ? '🤖 LLM' : '📝 规则'}</span>
+                        </div>
+                    </div>
                 </div>
             `;
             
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            if (data.user_profile) {
+                html += `
+                    <div class="result-card profile-card">
+                        <div class="card-title">👤 用户画像</div>
+                        <div class="profile-text">${data.user_profile}</div>
+                    </div>
+                `;
+            }
+            
+            entities.innerHTML = html;
         }
         
         // 添加聊天消息
