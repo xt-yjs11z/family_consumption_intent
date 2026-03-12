@@ -752,25 +752,11 @@
             const result = document.getElementById('result');
             result.classList.add('show');
             
-            // 新版字段映射
-            const stageNames = {
-                'awareness': '兴趣阶段',
-                'consideration': '考虑阶段',
-                'purchase': '购买阶段'
-            };
+            // 意图标签
+            document.getElementById('intentTag').textContent = data.intent ? '有消费意图' : '无消费意图';
             
-            const strengthNames = {
-                'low': '低',
-                'medium': '中',
-                'high': '高'
-            };
-            
-            document.getElementById('intentTag').textContent = 
-                `${data.intent_category} | ${stageNames[data.intent_stage] || data.intent_stage} | ${strengthNames[data.intent_strength] || data.intent_strength}强度`;
-            
-            // 置信度用 intent_strength 映射
-            const strengthScore = {'low': 0.3, 'medium': 0.6, 'high': 0.9};
-            const confidence = Math.round((strengthScore[data.intent_strength] || 0.5) * 100);
+            // 置信度（基于是否有意图）
+            const confidence = data.intent ? 85 : 20;
             document.getElementById('confidenceText').textContent = `${confidence}%`;
             document.getElementById('confidenceBar').style.width = `${confidence}%`;
             
@@ -779,13 +765,16 @@
             entities.innerHTML = '';
             
             const displayItems = [
-                {label: '消费意图', value: data.has_intent ? '是' : '否'},
-                {label: '商品类别', value: data.intent_category},
-                {label: '具体商品', value: data.product || '-'},
-                {label: '意图阶段', value: stageNames[data.intent_stage] || data.intent_stage},
-                {label: '意图强度', value: strengthNames[data.intent_strength] || data.intent_strength},
-                {label: '关键词', value: data.keywords ? data.keywords.join(', ') : ''},
-                {label: '原因', value: data.reason}
+                {label: '🎯 意图', value: data.intent ? '是' : '否'},
+                {label: '📂 类别', value: data.category || '-'},
+                {label: '🎯 目标', value: data.target || '-'},
+                {label: '🏠 场景', value: data.scenario || '-'},
+                {label: '💰 预算', value: data.budget || '未提及'},
+                {label: '⏰ 时间', value: data.time || '未提及'},
+                {label: '📍 地点', value: data.location || '未提及'},
+                {label: '👤 画像', value: data.user_profile || '-'},
+                {label: '💡 动机', value: data.motivation || '-'},
+                {label: '🔧 方法', value: data.method || 'rule'}
             ];
             
             for (const item of displayItems) {
@@ -806,7 +795,6 @@
                 let profileHtml = '<div style="margin-top:12px;padding:10px;background:#f0f7ff;border-radius:8px;"><div style="font-weight:600;color:#333;margin-bottom:8px;">🏠 家庭画像</div>';
                 profileHtml += `<div>收入: ${profile.income_level || '-'}</div>`;
                 profileHtml += `<div>消费习惯: ${profile.spending_habit || '-'}</div>`;
-                // 显示家长成员
                 if (profile.members && profile.members.length > 0) {
                     profileHtml += `<div>成员: ${profile.members.join(', ')}</div>`;
                 }
@@ -819,12 +807,6 @@
                 }
                 profileHtml += '</div>';
                 entities.innerHTML += profileHtml;
-            }
-            
-            // 显示消费建议
-            if (data.spending_advice) {
-                const adviceHtml = `<div style="margin-top:10px;padding:10px;background:#fff8e0;border-radius:8px;"><div style="font-weight:600;color:#333;margin-bottom:4px;">💡 消费建议</div><div>${data.spending_advice}</div></div>`;
-                entities.innerHTML += adviceHtml;
             }
         }
         

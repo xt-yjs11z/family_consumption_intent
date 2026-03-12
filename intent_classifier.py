@@ -58,7 +58,7 @@ STRENGTH_PATTERNS = {
 }
 
 
-def rule_based_classify(text: str) -> dict:
+def rule_based_classify(text: str, profile: dict = None) -> dict:
     """规则匹配引擎"""
     keywords = []
     
@@ -84,13 +84,13 @@ def rule_based_classify(text: str) -> dict:
             break
     
     # 提取商品
-    product = ""
+    target = ""
     for cat, kws in CATEGORY_KEYWORDS.items():
         for kw in kws:
             if kw in text and len(kw) >= 2:
-                product = kw
+                target = kw
                 break
-        if product:
+        if target:
             break
     
     # 判断阶段
@@ -118,26 +118,55 @@ def rule_based_classify(text: str) -> dict:
                 break
     
     # 判断是否有意图
-    has_intent = stage in ["purchase", "consideration"] or (category != "unknown" and len(keywords) > 0)
+    intent = stage in ["purchase", "consideration"] or (category != "unknown" and len(keywords) > 0)
     
-    # 生成理由
-    if not has_intent:
-        reason = "对话中未出现消费意图"
+    # 推断场景
+    scenario = "自用"
+    if "送" in text or "礼物" in text:
+        scenario = "送礼"
+    elif "换" in text or "维修" in text:
+        scenario = "升级/维修"
+    
+    # 推断时间
+    time = "未知"
+    if "现在" in text or "马上" in text:
+        time = "立即"
+    elif "明天" in text or "今天" in text:
+        time = "近期"
+    elif "以后" in text or "以后" in text:
+        time = "以后再说"
     elif stage == "purchase":
-        reason = "用户明确表达购买意向"
+        time = "有购买意向"
     elif stage == "consideration":
-        reason = "用户在询问价格或进行比较"
-    else:
-        reason = "用户对某商品表达兴趣"
+        time = "考虑中"
+    
+    # 推断动机
+    motivation = "兴趣表达"
+    if stage == "purchase":
+        motivation = "明确购买需求"
+    elif stage == "consideration":
+        motivation = "信息收集/比价"
+    elif "坏了" in text or "旧了" in text:
+        motivation = "更换需求"
+    
+    # 用户画像
+    user_profile = ""
+    if profile:
+        income = profile.get("income_level", "")
+        habit = profile.get("spending_habit", "")
+        members = profile.get("members", [])
+        user_profile = f"收入{income}，消费{habit}，家庭成员{len(members)}人"
     
     return {
-        "has_intent": has_intent,
-        "intent_category": category,
-        "intent_stage": stage,
-        "intent_strength": strength,
-        "keywords": list(set(keywords))[:5],
-        "product": product,
-        "reason": reason,
+        "intent": intent,
+        "category": category,
+        "target": target,
+        "scenario": scenario,
+        "budget": "",
+        "time": time,
+        "location": "",
+        "user_profile": user_profile,
+        "motivation": motivation,
         "method": "rule"
     }
 
@@ -202,35 +231,58 @@ def llm_classify(text: str, profile: dict = None) -> dict:
 - 特殊成员：{", ".join(special) if special else "无"}
 """
 
-    prompt = f"""你是一个家庭消费意图识别助手。根据用户输入的文本，识别是否存在消费意图。
+    prompt = f"""你是一个家庭消费意图识别助手。根据用户输入的文本，识别消费意图。
 
 {profile_info}
 
-请分析以下文本：
-"{text}"
+请分析以下文本："{text}"
+
+请提取以下信息，以JSON格式返回：
+{{
+  "intent": true/false,  // 是否存在消费意图
+  "category": "商品类别",  // 如：餐饮、数码产品、家电、服装等
+  "target": "具体商品或目标",  // 具体想买什么
+  "scenario": "使用场景",  // 如：自用、送礼、升级、维修等
+  "budget": "预算金额或范围",  // 如：5000元以内、1000-2000元、无所谓等
+  "time": "时间意向",  // 如：现在、明天、最近、以后再说等
+  "location": "地点或购买渠道",  // 如：线上、线下、网购、外卖等
+  "user_profile": "用户画像摘要",  // 基于家庭画像判断的用户特征
+  "motivation": "购买动机"  // 如：刚需、兴趣爱好、送礼、应急等
+}}
 
 商品类别：家电、数码产品、电脑外设、家具、食品饮料、服装鞋帽、日用品、汽车、交通工具、母婴用品、娱乐产品、教育培训、医疗保健、通讯费、水电燃气、餐饮、服务
 
-意图阶段：awareness(兴趣阶段-只是提到)、consideration(考虑阶段-询问价格/比较)、purchase(购买阶段-明确要买)
-意图强度：low(低)、medium(中)、high(高)
-
-请以JSON格式返回：
-{{"has_intent":true/false,"intent_category":"类别","intent_stage":"阶段","intent_strength":"强度","keywords":["关键词"],"product":"具体商品","reason":"判断理由"}}
-
-只返回JSON。"""
+只返回JSON，不要其他内容。"""
 
     try:
         llm_response = call_llm(prompt)
         
         # 解析 JSON
-        json_match = re.search(r'\{[^{}]*\}', llm_response, re.DOTALL)
-        if json_match:
-            result = json.loads(json_match.group())
-        else:
+        try:
             result = json.loads(llm_response)
+        except:
+            json_match = re.search(r'\{[^{}]*\}', llm_response, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+            else:
+                # 尝试更宽松的匹配
+                result = json.loads(llm_response)
         
-        result["method"] = "llm"
-        return result
+        # 标准化字段名
+        standardized = {
+            "intent": result.get("intent", result.get("has_intent", False)),
+            "category": result.get("category", result.get("intent_category", "")),
+            "target": result.get("target", result.get("product", "")),
+            "scenario": result.get("scenario", ""),
+            "budget": result.get("budget", ""),
+            "time": result.get("time", ""),
+            "location": result.get("location", ""),
+            "user_profile": result.get("user_profile", ""),
+            "motivation": result.get("motivation", ""),
+            "method": "llm"
+        }
+        
+        return standardized
         
     except Exception as e:
         raise Exception(f"LLM识别失败: {str(e)}")
@@ -286,28 +338,13 @@ def classify(text: str) -> dict:
     if check_llm_available():
         try:
             result = llm_classify(text, profile)
-            # 添加画像和建议
-            if profile:
-                try:
-                    advice = get_spending_advice(result.get("intent_category", ""), profile, result.get("intent_stage", "awareness"))
-                    result["spending_advice"] = advice
-                except:
-                    result["spending_advice"] = ""
             result["family_profile"] = profile
             return result
         except Exception as e:
             print(f"[WARN] LLM调用失败，降级到规则匹配: {e}")
     
     # 降级到规则匹配
-    result = rule_based_classify(text)
-    
-    # 添加画像和建议
-    if PROFILE_ENABLED and profile:
-        try:
-            advice = get_spending_advice(result.get("intent_category", ""), profile, result.get("intent_stage", "awareness"))
-            result["spending_advice"] = advice
-        except:
-            result["spending_advice"] = ""
+    result = rule_based_classify(text, profile)
     result["family_profile"] = profile
     
     return result
@@ -316,23 +353,19 @@ def classify(text: str) -> dict:
 def format_result(result: dict) -> str:
     """格式化输出"""
     intent_map = {True: "有", False: "无"}
-    strength_map = {"high": "高", "medium": "中", "low": "低"}
-    stage_map = {"awareness": "兴趣阶段", "consideration": "考虑阶段", "purchase": "购买阶段"}
     
-    lines = [f"🎯 意图: {intent_map.get(result.get('has_intent'), '无')}",
-             f"📂 类别: {result.get('intent_category', 'unknown')}",
-             f"🛍️ 商品: {result.get('product', '-')}",
-             f"📊 强度: {strength_map.get(result.get('intent_strength', 'low'), '低')}",
-             f"💡 阶段: {stage_map.get(result.get('intent_stage', 'awareness'), '兴趣阶段')}",
-             f"🔧 方法: {result.get('method', 'rule')}"]
-    
-    profile = result.get('family_profile')
-    if profile:
-        lines.append(f"🏠 家庭: {profile.get('family_name', '')} | 收入: {profile.get('income_level', '')}")
-    
-    advice = result.get('spending_advice', '')
-    if advice:
-        lines.append(f"💡 建议: {advice}")
+    lines = [
+        f"🎯 意图: {intent_map.get(result.get('intent', False), '无')}",
+        f"📂 类别: {result.get('category', '-')}",
+        f"🎯 目标: {result.get('target', '-')}",
+        f"🏠 场景: {result.get('scenario', '-')}",
+        f"💰 预算: {result.get('budget', '未提及')}",
+        f"⏰ 时间: {result.get('time', '未提及')}",
+        f"📍 地点: {result.get('location', '未提及')}",
+        f"👤 画像: {result.get('user_profile', '未知')}",
+        f"💡 动机: {result.get('motivation', '-')}",
+        f"🔧 方法: {result.get('method', 'rule')}"
+    ]
     
     return "\n".join(lines)
 
