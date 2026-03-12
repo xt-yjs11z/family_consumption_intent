@@ -603,22 +603,12 @@
             font-weight: 600;
         }
         
-        .chat-message .md-table-row {
-            display: flex;
-            padding: 4px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
+        .chat-message .chat-icon {
+            margin-right: 4px;
         }
         
-        .chat-message .md-col1 {
-            flex: 0 0 80px;
-            color: #888;
-        }
-        
-        .chat-message .md-col2 {
-            flex: 1;
-            color: #333;
-            font-weight: 500;
+        .chat-message br {
+            margin-bottom: 4px;
         }
     </style>
 </head>
@@ -925,15 +915,13 @@
                 
                 // 如果有意图识别结果，添加格式化展示
                 if (intentData.intent) {
-                    formattedReply += `🎯 **意图识别结果**\n\n`;
-                    formattedReply += `| 项目 | 内容 |\n`;
-                    formattedReply += `| --- | --- |\n`;
-                    formattedReply += `| 📂 类别 | ${intentData.category || '-'} |\n`;
-                    formattedReply += `| 🎯 目标 | ${intentData.target || '-'} |\n`;
-                    formattedReply += `| 🏠 场景 | ${intentData.scenario || '-'} |\n`;
-                    formattedReply += `| 💰 预算 | ${intentData.budget || '未提及'} |\n`;
-                    formattedReply += `| ⏰ 时间 | ${intentData.time || '未提及'} |\n`;
-                    formattedReply += `| 💡 动机 | ${intentData.motivation || '-'} |\n\n`;
+                    formattedReply += `🎯 意图识别结果\n`;
+                    formattedReply += `📂 类别：${intentData.category || '-'}\n`;
+                    formattedReply += `🎯 目标：${intentData.target || '-'}\n`;
+                    formattedReply += `🏠 场景：${intentData.scenario || '-'}\n`;
+                    formattedReply += `💰 预算：${intentData.budget || '未提及'}\n`;
+                    formattedReply += `⏰ 时间：${intentData.time || '未提及'}\n`;
+                    formattedReply += `💡 动机：${intentData.motivation || '-'}\n\n`;
                 }
                 
                 // 添加 LLM 回复
@@ -962,16 +950,21 @@
             }
         }
         
-        // 添加格式化的消息（支持简单Markdown）
+        // 添加格式化的消息
         function addFormattedMessage(content, role) {
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = `chat-message ${role}`;
             
-            // 简单Markdown转换
+            // 简单格式化转换
             let html = content
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\| (.*?) \| (.*?) \|/g, '<div class="md-table-row"><span class="md-col1">$1</span><span class="md-col2">$2</span></div>')
+                .replace(/📂 /g, '<span class="chat-icon">📂</span>')
+                .replace(/🎯 /g, '<span class="chat-icon">🎯</span>')
+                .replace(/🏠 /g, '<span class="chat-icon">🏠</span>')
+                .replace(/💰 /g, '<span class="chat-icon">💰</span>')
+                .replace(/⏰ /g, '<span class="chat-icon">⏰</span>')
+                .replace(/💡 /g, '<span class="chat-icon">💡</span>')
                 .replace(/\n/g, '<br>');
             
             div.innerHTML = html;
