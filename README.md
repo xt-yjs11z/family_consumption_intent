@@ -13,7 +13,20 @@
 
 ## 快速开始
 
-### 1. 启动 API 服务
+### 1. 安装依赖 （通过 requirements.txt）
+# 建议先创建并激活虚拟环境（可选但推荐）
+python3 -m venv venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate  # Windows
+
+# 安装 requirements.txt 中的所有依赖
+pip install -r requirements.txt
+
+# OCR 额外系统依赖（仅 Linux/macOS）
+# macOS: brew install tesseract
+# Ubuntu/Debian: sudo apt install tesseract-ocr
+
+### 2. 启动 API 服务
 
 ```bash
 cd family-intent-recognition-v1.0.2
@@ -26,7 +39,7 @@ python3 api.py
 - 家庭画像: http://localhost:5000/profile
 - LLM 对话: http://localhost:5000/chat
 
-### 2. 启动 Web 前端
+### 3. 启动 Web 前端
 
 ```bash
 # 方法1: 直接打开 HTML 文件
@@ -38,7 +51,7 @@ python3 -m http.server 8080
 # 浏览器访问: http://localhost:8080/family-intent-frontend.html
 ```
 
-### 3. 局域网访问
+### 4. 局域网访问
 
 获取本机 IP：
 ```bash
