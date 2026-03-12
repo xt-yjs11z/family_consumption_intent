@@ -732,12 +732,12 @@
                             <br><br>有什么可以帮你的？
                         </div>
                     </div>
+                    <!-- 意图识别结果展示区 -->
+                    <div id="chatIntentResult"></div>
                     <div class="chat-input-area">
                         <textarea class="chat-input" id="chatInput" placeholder="输入消息..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
                         <button class="chat-send" id="chatSendBtn" onclick="sendChat()">发送</button>
                     </div>
-                    <!-- 意图识别结果展示区 -->
-                    <div id="chatIntentResult"></div>
                 </div>
             </div>
             
