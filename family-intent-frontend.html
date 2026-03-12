@@ -611,13 +611,12 @@
             margin-bottom: 4px;
         }
         
-        /* 聊天中的意图识别卡片 */
+        /* 发送栏下方的意图识别卡片 */
         .chat-intent-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
             padding: 12px;
-            margin: 8px 0 16px 40px;
-            max-width: 85%;
+            margin-top: 12px;
             color: white;
         }
         
@@ -737,6 +736,8 @@
                         <textarea class="chat-input" id="chatInput" placeholder="输入消息..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
                         <button class="chat-send" id="chatSendBtn" onclick="sendChat()">发送</button>
                     </div>
+                    <!-- 意图识别结果展示区 -->
+                    <div id="chatIntentResult"></div>
                 </div>
             </div>
             
@@ -983,11 +984,15 @@
             container.scrollTop = container.scrollHeight;
         }
         
-        // 在聊天区域显示意图识别结果卡片
+        // 在发送栏下方显示意图识别结果卡片
         function addIntentCard(data) {
-            if (!data.intent) return;
+            if (!data.intent) {
+                document.getElementById('chatIntentResult').innerHTML = '';
+                return;
+            }
             
-            const container = document.getElementById('chatMessages');
+            const container = document.getElementById('chatIntentResult');
+            container.innerHTML = '';
             const div = document.createElement('div');
             div.className = 'chat-intent-card';
             
