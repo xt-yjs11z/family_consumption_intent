@@ -124,11 +124,12 @@
         
         .intent-tag {
             display: inline-block;
-            padding: 4px 12px;
+            padding: 8px 20px;
             background: #667eea;
             color: white;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: 600;
         }
         
         .confidence-bar {
@@ -506,6 +507,94 @@
         @keyframes typing {
             0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
             40% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* 结果卡片样式 */
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .main-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .main-card .card-title {
+            color: white;
+        }
+        
+        .main-card .card-label {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .main-card .card-value {
+            color: white;
+        }
+        
+        .main-card .card-value.highlight {
+            color: #ffd700;
+            font-weight: 700;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .card-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .card-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .card-value.highlight {
+            color: #667eea;
+            font-size: 16px;
+        }
+        
+        .profile-card {
+            background: #f0f7ff;
+        }
+        
+        .family-card {
+            background: #fff8e0;
+        }
+        
+        .profile-text {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .special-tags {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+            font-size: 13px;
+            color: #666;
         }
     </style>
 </head>
@@ -968,62 +1057,100 @@
             const result = document.getElementById('result');
             result.classList.add('show');
             
-            // 意图标签
-            document.getElementById('intentTag').textContent = data.intent ? '有消费意图' : '无消费意图';
+            // 意图标签 - 大字展示
+            const intentTag = document.getElementById('intentTag');
+            intentTag.textContent = data.intent ? '✅ 有消费意图' : '❌ 无消费意图';
+            intentTag.style.background = data.intent ? 'linear-gradient(135deg, #4caf50, #45a049)' : '#999';
             
-            // 置信度（基于是否有意图）
+            // 置信度
             const confidence = data.intent ? 85 : 20;
             document.getElementById('confidenceText').textContent = `${confidence}%`;
             document.getElementById('confidenceBar').style.width = `${confidence}%`;
             
-            // 显示关键信息
+            // 构建分组展示
             const entities = document.getElementById('entities');
             entities.innerHTML = '';
             
-            const displayItems = [
-                {label: '🎯 意图', value: data.intent ? '是' : '否'},
-                {label: '📂 类别', value: data.category || '-'},
-                {label: '🎯 目标', value: data.target || '-'},
-                {label: '🏠 场景', value: data.scenario || '-'},
-                {label: '💰 预算', value: data.budget || '未提及'},
-                {label: '⏰ 时间', value: data.time || '未提及'},
-                {label: '📍 地点', value: data.location || '未提及'},
-                {label: '👤 画像', value: data.user_profile || '-'},
-                {label: '💡 动机', value: data.motivation || '-'},
-                {label: '🔧 方法', value: data.method || 'rule'}
-            ];
+            // 核心信息卡片
+            let html = `
+                <div class="result-card main-card">
+                    <div class="card-title">🎯 识别结果</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">📂 类别</span>
+                            <span class="card-value highlight">${data.category || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🎯 目标</span>
+                            <span class="card-value highlight">${data.target || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🏠 场景</span>
+                            <span class="card-value">${data.scenario || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">💡 动机</span>
+                            <span class="card-value">${data.motivation || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="card-title">📋 详细信息</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">💰 预算</span>
+                            <span class="card-value">${data.budget || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">⏰ 时间</span>
+                            <span class="card-value">${data.time || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">📍 地点</span>
+                            <span class="card-value">${data.location || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🔧 识别方式</span>
+                            <span class="card-value">${data.method === 'llm' ? '🤖 LLM智能识别' : '📝 规则匹配'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            for (const item of displayItems) {
-                if (item.value) {
-                    const div = document.createElement('div');
-                    div.className = 'entity-item';
-                    div.innerHTML = `
-                        <span class="entity-label">${item.label}:</span>
-                        <span class="entity-value">${item.value}</span>
-                    `;
-                    entities.appendChild(div);
-                }
+            // 用户画像卡片
+            if (data.user_profile) {
+                html += `
+                    <div class="result-card profile-card">
+                        <div class="card-title">👤 用户画像</div>
+                        <div class="profile-text">${data.user_profile}</div>
+                    </div>
+                `;
             }
             
-            // 显示家庭画像
+            // 家庭画像卡片
             if (data.family_profile) {
                 const profile = data.family_profile;
-                let profileHtml = '<div style="margin-top:12px;padding:10px;background:#f0f7ff;border-radius:8px;"><div style="font-weight:600;color:#333;margin-bottom:8px;">🏠 家庭画像</div>';
-                profileHtml += `<div>收入: ${profile.income_level || '-'}</div>`;
-                profileHtml += `<div>消费习惯: ${profile.spending_habit || '-'}</div>`;
-                if (profile.members && profile.members.length > 0) {
-                    profileHtml += `<div>成员: ${profile.members.join(', ')}</div>`;
-                }
                 let special = [];
-                if (profile.has_child) special.push('小孩');
-                if (profile.has_elderly) special.push('老人');
-                if (profile.has_pregnant) special.push('孕妇');
-                if (special.length > 0) {
-                    profileHtml += `<div>特殊成员: ${special.join(', ')}</div>`;
-                }
-                profileHtml += '</div>';
-                entities.innerHTML += profileHtml;
+                if (profile.has_child) special.push('👶 小孩');
+                if (profile.has_elderly) special.push('👴 老人');
+                if (profile.has_pregnant) special.push('🤰 孕妇');
+                
+                html += `
+                    <div class="result-card family-card">
+                        <div class="card-title">🏠 家庭画像</div>
+                        <div class="card-grid">
+                            <div class="card-item"><span class="card-label">家庭</span><span class="card-value">${profile.family_name || '-'}</span></div>
+                            <div class="card-item"><span class="card-label">收入</span><span class="card-value">${profile.income_level || '-'}</span></div>
+                            <div class="card-item"><span class="card-label">消费习惯</span><span class="card-value">${profile.spending_habit || '-'}</span></div>
+                            <div class="card-item"><span class="card-label">成员</span><span class="card-value">${(profile.members || []).join(', ') || '-'}</span></div>
+                        </div>
+                        ${special.length > 0 ? `<div class="special-tags">${special.join(' ')}</div>` : ''}
+                    </div>
+                `;
             }
+            
+            entities.innerHTML = html;
         }
         
         // 添加历史记录（去重：短时间相同内容不重复添加）
@@ -1045,7 +1172,7 @@
             list.innerHTML = conversationHistory.map((item, i) => `
                 <div class="history-item" onclick="useHistory(${i})">
                     <div class="history-text">${item.text}</div>
-                    <div class="history-intent">${item.result.intent_category || 'unknown'} | ${item.result.product || '-'} | ${item.result.intent_stage || '-'}</div>
+                    <div class="history-intent">${item.result.intent ? '✅' : '❌'} ${item.result.category || '-'} | ${item.result.target || '-'}</div>
                 </div>
             `).join('');
         }
