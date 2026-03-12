@@ -596,6 +596,30 @@
             font-size: 13px;
             color: #666;
         }
+        
+        /* 聊天消息Markdown样式 */
+        .chat-message strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .chat-message .md-table-row {
+            display: flex;
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .chat-message .md-col1 {
+            flex: 0 0 80px;
+            color: #888;
+        }
+        
+        .chat-message .md-col2 {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -871,40 +895,63 @@
             const loadingId = addChatMessage('', 'loading');
             
             try {
-                // 调用 LLM API（复用意图识别的API）
-                const res = await fetch(`${API_URL}/chat`, {
+                // 先进行意图识别
+                const intentRes = await fetch(`${API_URL}/intent`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: message})
+                });
+                const intentData = await intentRes.json();
+                
+                // 调用 LLM 获取回复
+                const chatRes = await fetch(`${API_URL}/chat`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         message: message,
-                        history: chatHistory
+                        history: chatHistory,
+                        intent: intentData
                     })
                 });
                 
-                let response;
-                if (res.ok) {
-                    response = await res.json();
-                } else {
-                    // 如果没有 /chat 接口，尝试用意图识别
-                    const intentRes = await fetch(`${API_URL}/intent`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({text: message})
-                    });
-                    const intentData = await intentRes.json();
-                    response = { response: `意图识别结果：\n\n🎯 意图: ${intentData.intent ? '有' : '无'}\n📂 类别: ${intentData.category || '-'}\n🎯 目标: ${intentData.target || '-'}\n🏠 场景: ${intentData.scenario || '-'}\n💰 预算: ${intentData.budget || '未提及'}\n⏰ 时间: ${intentData.time || '未提及'}\n📍 地点: ${intentData.location || '未提及'}\n💡 动机: ${intentData.motivation || '-'}` };
+                let chatReply = "";
+                if (chatRes.ok) {
+                    const data = await chatRes.json();
+                    chatReply = data.response || "";
+                }
+                
+                // 构建格式化的回复
+                let formattedReply = "";
+                
+                // 如果有意图识别结果，添加格式化展示
+                if (intentData.intent) {
+                    formattedReply += `🎯 **意图识别结果**\n\n`;
+                    formattedReply += `| 项目 | 内容 |\n`;
+                    formattedReply += `| --- | --- |\n`;
+                    formattedReply += `| 📂 类别 | ${intentData.category || '-'} |\n`;
+                    formattedReply += `| 🎯 目标 | ${intentData.target || '-'} |\n`;
+                    formattedReply += `| 🏠 场景 | ${intentData.scenario || '-'} |\n`;
+                    formattedReply += `| 💰 预算 | ${intentData.budget || '未提及'} |\n`;
+                    formattedReply += `| ⏰ 时间 | ${intentData.time || '未提及'} |\n`;
+                    formattedReply += `| 💡 动机 | ${intentData.motivation || '-'} |\n\n`;
+                }
+                
+                // 添加 LLM 回复
+                if (chatReply) {
+                    formattedReply += chatReply;
+                } else if (!intentData.intent) {
+                    formattedReply = "好的，我已经记录了。如果有任何消费相关的话题，我会帮你识别意图的～";
                 }
                 
                 // 移除loading
                 document.getElementById(loadingId)?.remove();
                 
-                // 添加助手回复
-                const reply = response.response || response.message || JSON.stringify(response);
-                addChatMessage(reply, 'assistant');
+                // 添加助手回复（支持Markdown）
+                addFormattedMessage(formattedReply, 'assistant');
                 
                 // 保存对话历史
                 chatHistory.push({role: 'user', content: message});
-                chatHistory.push({role: 'assistant', content: reply});
+                chatHistory.push({role: 'assistant', content: formattedReply});
                 
             } catch (e) {
                 document.getElementById(loadingId)?.remove();
@@ -913,6 +960,23 @@
                 sendBtn.disabled = false;
                 input.focus();
             }
+        }
+        
+        // 添加格式化的消息（支持简单Markdown）
+        function addFormattedMessage(content, role) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `chat-message ${role}`;
+            
+            // 简单Markdown转换
+            let html = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\| (.*?) \| (.*?) \|/g, '<div class="md-table-row"><span class="md-col1">$1</span><span class="md-col2">$2</span></div>')
+                .replace(/\n/g, '<br>');
+            
+            div.innerHTML = html;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
         
         // 添加聊天消息
