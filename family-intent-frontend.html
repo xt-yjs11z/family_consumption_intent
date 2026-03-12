@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭消费意图识别</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #444;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 24px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .intent-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .entities {
+            margin-top: 12px;
+        }
+        
+        .entity-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .entity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .entity-label {
+            color: #666;
+            font-size: 14px;
+            min-width: 70px;
+        }
+        
+        .entity-value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .history {
+            margin-top: 24px;
+        }
+        
+        .history-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .history-item {
+            padding: 10px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .history-item:hover {
+            background: #e8e8e8;
+        }
+        
+        .history-text {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .history-intent {
+            color: #667eea;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-dot.online {
+            background: #4caf50;
+        }
+        
+        .status-dot.offline {
+            background: #f44336;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #f0f0f0;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .profile-form {
+            display: none;
+        }
+        
+        .profile-form.show {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #444;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item:hover {
+            background: #e8e8e8;
+        }
+        
+        .profile-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .profile-success.show {
+            display: block;
+        }
+        
+        .profile-info {
+            background: #f0f7ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .profile-info div {
+            padding: 4px 0;
+        }
+        
+        .image-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .image-upload input {
+            display: none;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            display: none;
+            margin-top: 12px;
+        }
+        
+        .image-preview.show {
+            display: block;
+        }
+        
+        .ocr-text {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #666;
+            display: none;
+        }
+        
+        .ocr-text.show {
+            display: block;
+        }
+        
+        .ocr-text strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎯 家庭消费意图识别</h1>
+            <p class="subtitle">智能识别您的消费意图</p>
+            
+            <div class="api-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">检查API状态...</span>
+            </div>
+            
+            <div class="tab-container">
+                <button class="tab-btn active" id="tabRecognize" onclick="switchTab('recognize')">🎯 意图识别</button>
+                <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">🏠 家庭画像</button>
+            </div>
+            
+            <!-- 意图识别页面 -->
+            <div id="recognizePage">
+            
+            <div class="input-group">
+                <label>API 地址：</label>
+                <input type="text" id="apiUrlInput" value="http://192.168.11.11:5000" 
+                    style="width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;"
+                    onchange="updateApiUrl()">
+            </div>
+            
+            <div class="input-group">
+                <label for="textInput">请输入您的消费相关描述：</label>
+                <textarea 
+                    id="textInput" 
+                    placeholder="例如：想买一台电脑"、"本月花了多少钱"、"有什么推荐"
+                    rows="3"
+                ></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label>或上传图片识别（截图、发票、商品图）：</label>
+                <div class="image-upload" onclick="document.getElementById('imageInput').click()">
+                    <span id="uploadText">📷 点击上传图片</span>
+                    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+                    <img id="imagePreview" class="image-preview" alt="预览">
+                </div>
+                <div class="ocr-text" id="ocrText"></div>
+            </div>
+            
+            <button class="btn" id="submitBtn" onclick="recognizeIntent()">
+                识别意图
+            </button>
+            
+            <div class="error" id="error"></div>
+            
+            <div class="result" id="result">
+                <div class="result-title">
+                    识别结果
+                    <span class="intent-tag" id="intentTag"></span>
+                </div>
+                <div>置信度：<span id="confidenceText">0%</span></div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceBar"></div>
+                </div>
+                <div class="entities" id="entities"></div>
+            </div>
+            
+            <div class="history" id="historySection" style="display: none;">
+                <div class="history-title">历史记录</div>
+                <div id="historyList"></div>
+            </div>
+            </div>
+            
+            <!-- 家庭画像设置页面 -->
+            <div id="profilePage" class="profile-form">
+                <div class="profile-success" id="profileSuccess">✅ 保存成功！</div>
+                
+                <div class="profile-info" id="profileInfo">
+                    <div style="font-weight:600;margin-bottom:8px;">当前画像：</div>
+                    <div id="currentProfile"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>🏠 家庭名称：</label>
+                    <input type="text" id="familyName" placeholder="例如：吴海超家">
+                </div>
+                
+                <div class="form-group">
+                    <label>👨‍👩‍👧 成员（用逗号分隔）：</label>
+                    <input type="text" id="members" placeholder="例如：爸爸,妈妈,小孩">
+                </div>
+                
+                <div class="form-group">
+                    <label>💰 收入水平：</label>
+                    <select id="incomeLevel">
+                        <option value="低">低收入</option>
+                        <option value="中等" selected>中等收入</option>
+                        <option value="高">高收入</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>🛒 消费习惯：</label>
+                    <select id="spendingHabit">
+                        <option value="节俭">节俭</option>
+                        <option value="中等" selected>中等</option>
+                        <option value="大方">大方</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>特殊成员：</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="hasChild"> 👶 有小孩
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="hasElderly"> 👴 有老人
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="hasPregnant"> 🤰 孕妇
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="saveProfile()">保存画像</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从URL参数或自动检测获取API地址
+        const urlParams = new URLSearchParams(window.location.search);
+        let API_URL = urlParams.get('api');
+        
+        if (!API_URL) {
+            // 尝试从当前主机名推断
+            const host = window.location.hostname;
+            API_URL = host === 'localhost' || host === '127.0.0.1' 
+                ? 'http://localhost:5000' 
+                : 'http://' + host + ':5000';
+        }
+        
+        // 允许用户手动修改API地址
+        function updateApiUrl() {
+            const input = document.getElementById('apiUrlInput').value.trim();
+            if (input) {
+                API_URL = input;
+                checkStatus();
+            }
+        }
+        
+        // Tab 切换
+        function switchTab(tab) {
+            document.getElementById('tabRecognize').className = tab === 'recognize' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tabProfile').className = tab === 'profile' ? 'tab-btn active' : 'tab-btn';
+            
+            document.getElementById('recognizePage').style.display = tab === 'recognize' ? 'block' : 'none';
+            document.getElementById('profilePage').className = tab === 'profile' ? 'profile-form show' : 'profile-form';
+            
+            if (tab === 'profile') {
+                loadProfile();
+            }
+        }
+        
+        // 加载家庭画像
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_URL}/profile`);
+                const profile = await res.json();
+                
+                document.getElementById('familyName').value = profile.family_name || '';
+                document.getElementById('members').value = profile.members ? profile.members.join(',') : '';
+                document.getElementById('incomeLevel').value = profile.income_level || '中等';
+                document.getElementById('spendingHabit').value = profile.spending_habit || '中等';
+                document.getElementById('hasChild').checked = profile.has_child || false;
+                document.getElementById('hasElderly').checked = profile.has_elderly || false;
+                document.getElementById('hasPregnant').checked = profile.has_pregnant || false;
+                
+                // 显示当前画像
+                let infoHtml = '';
+                if (profile.family_name) infoHtml += `<div>🏠 家庭：${profile.family_name}</div>`;
+                if (profile.members && profile.members.length) infoHtml += `<div>👨‍👩‍👧 成员：${profile.members.join(', ')}</div>`;
+                infoHtml += `<div>💰 收入：${profile.income_level || '-'}</div>`;
+                infoHtml += `<div>🛒 消费：${profile.spending_habit || '-'}</div>`;
+                let special = [];
+                if (profile.has_child) special.push('小孩');
+                if (profile.has_elderly) special.push('老人');
+                if (profile.has_pregnant) special.push('孕妇');
+                if (special.length) infoHtml += `<div>⚠️ 特殊：${special.join(', ')}</div>`;
+                
+                document.getElementById('currentProfile').innerHTML = infoHtml || '未设置';
+                
+            } catch (e) {
+                console.error('加载画像失败', e);
+            }
+        }
+        
+        // 保存家庭画像
+        async function saveProfile() {
+            const familyName = document.getElementById('familyName').value.trim();
+            const membersStr = document.getElementById('members').value.trim();
+            const members = membersStr ? membersStr.split(',').map(m => m.trim()).filter(m => m) : [];
+            
+            const profile = {
+                family_name: familyName,
+                members: members,
+                income_level: document.getElementById('incomeLevel').value,
+                spending_habit: document.getElementById('spendingHabit').value,
+                has_child: document.getElementById('hasChild').checked,
+                has_elderly: document.getElementById('hasElderly').checked,
+                has_pregnant: document.getElementById('hasPregnant').checked
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/profile`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(profile)
+                });
+                
+                if (!res.ok) throw new Error('保存失败');
+                
+                document.getElementById('profileSuccess').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('profileSuccess').classList.remove('show');
+                }, 3000);
+                
+                loadProfile();
+                
+            } catch (e) {
+                alert('保存失败：' + e.message);
+            }
+        }
+        
+        let conversationHistory = [];
+        
+        // 检查API状态
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API_URL}/health`);
+                const data = await res.json();
+                document.getElementById('statusDot').className = 'status-dot online';
+                document.getElementById('statusText').textContent = 'API 已连接';
+                return true;
+            } catch (e) {
+                document.getElementById('statusDot').className = 'status-dot offline';
+                document.getElementById('statusText').textContent = 'API 未连接，请先启动服务';
+                return false;
+            }
+        }
+        
+        // 意图识别
+        async function recognizeIntent() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                showError('请输入内容');
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '识别中...';
+            hideError();
+            
+            try {
+                const res = await fetch(`${API_URL}/intent`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text})
+                });
+                
+                if (!res.ok) throw new Error('请求失败');
+                
+                const data = await res.json();
+                displayResult(data);
+                addToHistory(text, data);
+                
+            } catch (e) {
+                showError('API未启动，请运行: python3 ~/.openclaw/workspace/skills/family-intent-recognition/api.py');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '识别意图';
+            }
+        }
+        
+        // 处理图片上传
+        let uploadedImageBase64 = null;
+        
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 显示预览
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.classList.add('show');
+                document.getElementById('uploadText').textContent = '✅ 图片已加载，点击更换';
+                
+                // 存储 base64
+                uploadedImageBase64 = e.target.result;
+                
+                // 自动调用 OCR + 意图识别
+                recognizeFromImage();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 从图片识别意图
+        async function recognizeFromImage() {
+            if (!uploadedImageBase64) return;
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '识别中...';
+            hideError();
+            
+            try {
+                const res = await fetch(`${API_URL}/intent/image`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({image: uploadedImageBase64})
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    if (err.error && err.error.includes('OCR')) {
+                        showError('OCR未安装，请在服务器安装: pip install pytesseract tesseract-ocr');
+                    } else {
+                        throw new Error(err.error || '请求失败');
+                    }
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // 显示 OCR 识别的文字
+                if (data.ocr_text) {
+                    const ocrDiv = document.getElementById('ocrText');
+                    ocrDiv.innerHTML = `<strong>📝 OCR识别文字：</strong>${data.ocr_text}`;
+                    ocrDiv.classList.add('show');
+                }
+                
+                // 显示识别结果
+                displayResult(data);
+                
+            } catch (e) {
+                showError('图片识别失败：' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '识别意图';
+            }
+        }
+        
+        // 显示结果
+        function displayResult(data) {
+            const result = document.getElementById('result');
+            result.classList.add('show');
+            
+            // 新版字段映射
+            const stageNames = {
+                'awareness': '兴趣阶段',
+                'consideration': '考虑阶段',
+                'purchase': '购买阶段'
+            };
+            
+            const strengthNames = {
+                'low': '低',
+                'medium': '中',
+                'high': '高'
+            };
+            
+            document.getElementById('intentTag').textContent = 
+                `${data.intent_category} | ${stageNames[data.intent_stage] || data.intent_stage} | ${strengthNames[data.intent_strength] || data.intent_strength}强度`;
+            
+            // 置信度用 intent_strength 映射
+            const strengthScore = {'low': 0.3, 'medium': 0.6, 'high': 0.9};
+            const confidence = Math.round((strengthScore[data.intent_strength] || 0.5) * 100);
+            document.getElementById('confidenceText').textContent = `${confidence}%`;
+            document.getElementById('confidenceBar').style.width = `${confidence}%`;
+            
+            // 显示关键信息
+            const entities = document.getElementById('entities');
+            entities.innerHTML = '';
+            
+            const displayItems = [
+                {label: '消费意图', value: data.has_intent ? '是' : '否'},
+                {label: '商品类别', value: data.intent_category},
+                {label: '具体商品', value: data.product || '-'},
+                {label: '意图阶段', value: stageNames[data.intent_stage] || data.intent_stage},
+                {label: '意图强度', value: strengthNames[data.intent_strength] || data.intent_strength},
+                {label: '关键词', value: data.keywords ? data.keywords.join(', ') : ''},
+                {label: '原因', value: data.reason}
+            ];
+            
+            for (const item of displayItems) {
+                if (item.value) {
+                    const div = document.createElement('div');
+                    div.className = 'entity-item';
+                    div.innerHTML = `
+                        <span class="entity-label">${item.label}:</span>
+                        <span class="entity-value">${item.value}</span>
+                    `;
+                    entities.appendChild(div);
+                }
+            }
+            
+            // 显示家庭画像
+            if (data.family_profile) {
+                const profile = data.family_profile;
+                let profileHtml = '<div style="margin-top:12px;padding:10px;background:#f0f7ff;border-radius:8px;"><div style="font-weight:600;color:#333;margin-bottom:8px;">🏠 家庭画像</div>';
+                profileHtml += `<div>收入: ${profile.income_level || '-'}</div>`;
+                profileHtml += `<div>消费习惯: ${profile.spending_habit || '-'}</div>`;
+                // 显示家长成员
+                if (profile.members && profile.members.length > 0) {
+                    profileHtml += `<div>成员: ${profile.members.join(', ')}</div>`;
+                }
+                let special = [];
+                if (profile.has_child) special.push('小孩');
+                if (profile.has_elderly) special.push('老人');
+                if (profile.has_pregnant) special.push('孕妇');
+                if (special.length > 0) {
+                    profileHtml += `<div>特殊成员: ${special.join(', ')}</div>`;
+                }
+                profileHtml += '</div>';
+                entities.innerHTML += profileHtml;
+            }
+            
+            // 显示消费建议
+            if (data.spending_advice) {
+                const adviceHtml = `<div style="margin-top:10px;padding:10px;background:#fff8e0;border-radius:8px;"><div style="font-weight:600;color:#333;margin-bottom:4px;">💡 消费建议</div><div>${data.spending_advice}</div></div>`;
+                entities.innerHTML += adviceHtml;
+            }
+        }
+        
+        // 添加历史记录（去重：短时间相同内容不重复添加）
+        function addToHistory(text, result) {
+            // 检查最近2条是否有相同内容
+            if (conversationHistory.length > 0 && 
+                conversationHistory[0].text === text &&
+                Date.now() - new Date(conversationHistory[0].time).getTime() < 60000) {
+                return; // 60秒内相同内容不重复添加
+            }
+            
+            conversationHistory.unshift({text, result, time: new Date()});
+            if (conversationHistory.length > 10) conversationHistory.pop();
+            
+            const section = document.getElementById('historySection');
+            section.style.display = 'block';
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = conversationHistory.map((item, i) => `
+                <div class="history-item" onclick="useHistory(${i})">
+                    <div class="history-text">${item.text}</div>
+                    <div class="history-intent">${item.result.intent_category || 'unknown'} | ${item.result.product || '-'} | ${item.result.intent_stage || '-'}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 使用历史记录
+        function useHistory(index) {
+            const item = conversationHistory[index];
+            document.getElementById('textInput').value = item.text;
+            displayResult(item.result);
+        }
+        
+        // 错误提示
+        function showError(msg) {
+            const err = document.getElementById('error');
+            err.textContent = msg;
+            err.classList.add('show');
+        }
+        
+        function hideError() {
+            document.getElementById('error').classList.remove('show');
+        }
+        
+        // 回车提交
+        document.getElementById('textInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                recognizeIntent();
+            }
+        });
+        
+        // 初始化
+        document.getElementById('apiUrlInput').value = API_URL;
+        checkStatus();
+        setInterval(checkStatus, 10000);
+    </script>
+</body>
+</html>
