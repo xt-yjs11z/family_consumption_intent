@@ -14,13 +14,19 @@
 ## 快速开始
 
 ### 1. 安装依赖 （通过 requirements.txt）
-# 建议先创建并激活虚拟环境（可选但推荐）
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate  # Windows
 
-# 安装 requirements.txt 中的所有依赖
-pip install -r requirements.txt
+ #### 建议先创建并激活虚拟环境（可选但推荐）
+
+ ```bash
+  python3 -m venv venv
+  source venv/bin/activate  # macOS/Linux
+  venv\Scripts\activate  # Windows
+ ```
+
+ #### 安装 requirements.txt 中的所有依赖
+ ```bash
+  pip install -r requirements.txt
+ ```
 
 # OCR 额外系统依赖（仅 Linux/macOS）
 # macOS: brew install tesseract
