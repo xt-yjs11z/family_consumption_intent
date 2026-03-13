@@ -1,0 +1,22 @@
+{
+  "name": "clawpack-skill",
+  "version": "1.2.0",
+  "description": "OpenClaw skill for clawpack - backup and restore configuration",
+  "type": "module",
+  "bin": {
+    "clawpack-skill": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "keywords": ["openclaw", "skill", "backup", "clawpack"],
+  "license": "MIT",
+  "dependencies": {
+    "clawpack": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

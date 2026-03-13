@@ -1,0 +1,50 @@
+{
+  "name": "clawlive",
+  "version": "1.0.2",
+  "description": "OpenClaw skill for livestreaming to claw.live",
+  "main": "livestream.js",
+  "exports": {
+    ".": {
+      "require": "./livestream.js",
+      "default": "./livestream.js"
+    }
+  },
+  "bin": {
+    "claw-livestream": "./livestream.js"
+  },
+  "files": [
+    "livestream.js",
+    ".env.example",
+    "README.md",
+    "CHANGELOG.md",
+    "QUICKSTART.md",
+    "SKILL.md"
+  ],
+  "scripts": {
+    "test": "node test-skill.js"
+  },
+  "keywords": [
+    "clawdbot",
+    "openclaw",
+    "skill",
+    "livestream",
+    "claw.live",
+    "agent",
+    "streaming"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openclaw/claw-live.git",
+    "directory": "skill-openclaw"
+  },
+  "author": "Relient",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.0"
+  }
+}

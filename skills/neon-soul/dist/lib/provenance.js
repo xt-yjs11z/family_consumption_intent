@@ -1,0 +1,80 @@
+/**
+ * Provenance chain builders for audit trails.
+ * Every axiom traces back to source signals.
+ */
+/**
+ * Create a signal source with timestamp.
+ */
+export function createSignalSource(file, line, context, type = 'memory') {
+    return {
+        type,
+        file,
+        line,
+        context,
+        extractedAt: new Date(),
+    };
+}
+/**
+ * Create principle provenance from contributing signals.
+ */
+export function createPrincipleProvenance(signals) {
+    return {
+        signals: signals.map(({ signal, similarity }) => ({
+            id: signal.id,
+            similarity,
+            source: signal.source,
+        })),
+        merged_at: new Date().toISOString(),
+    };
+}
+/**
+ * Create axiom provenance from contributing principles.
+ */
+export function createAxiomProvenance(principles) {
+    return {
+        principles: principles.map((p) => ({
+            id: p.id,
+            text: p.text,
+            n_count: p.n_count,
+        })),
+        promoted_at: new Date().toISOString(),
+    };
+}
+/**
+ * Build full provenance chain from axiom to original sources.
+ * Used for transparency and audit trails.
+ */
+export function traceToSource(axiom, principleMap, signalMap) {
+    const principles = [];
+    const signals = [];
+    for (const principleRef of axiom.derived_from.principles) {
+        principles.push({
+            id: principleRef.id,
+            text: principleRef.text,
+            n_count: principleRef.n_count,
+        });
+        // Get the full principle to access its signals
+        const principle = principleMap.get(principleRef.id);
+        if (principle) {
+            for (const signalRef of principle.derived_from.signals) {
+                const signal = signalMap.get(signalRef.id);
+                if (signal) {
+                    signals.push({
+                        id: signal.id,
+                        text: signal.text,
+                        source: signal.source,
+                    });
+                }
+            }
+        }
+    }
+    return {
+        axiom: {
+            id: axiom.id,
+            text: axiom.text,
+        },
+        principles,
+        signals,
+    };
+}
+//# sourceMappingURL=provenance.js.map

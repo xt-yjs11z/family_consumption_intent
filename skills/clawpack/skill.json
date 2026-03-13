@@ -1,0 +1,150 @@
+{
+  "name": "clawpack-skill",
+  "description": "Backup and restore OpenClaw configuration - pack, unpack, backup, restore, profile management",
+  "version": "1.1.0",
+  "tools": [
+    {
+      "name": "clawpack_pack",
+      "description": "Pack OpenClaw configuration into a local zip file. Use this when user wants to backup their config without GitHub or transfer to another device via file.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "outputFile": {
+            "type": "string",
+            "description": "Optional output filename (default: auto-generated)"
+          }
+        }
+      }
+    },
+    {
+      "name": "clawpack_unpack",
+      "description": "Unpack OpenClaw configuration from a local zip file. Use this when user wants to restore config from a file they received.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the pack file (.zip), e.g., 'clawpack-backup.zip' or '/path/to/backup.zip'"
+          }
+        },
+        "required": ["file"]
+      }
+    },
+    {
+      "name": "clawpack_backup",
+      "description": "Backup OpenClaw configuration to GitHub Gist or repository. Requires GitHub authentication. Good for cloud sync across devices.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "full": {
+            "type": "boolean",
+            "description": "Include complete configuration (not just skills) - recommended"
+          },
+          "workspace": {
+            "type": "boolean",
+            "description": "Include workspace files (SOUL.md, AGENTS.md, etc.)"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Push to a GitHub repository instead of Gist (format: owner/repo)"
+          },
+          "profile": {
+            "type": "string",
+            "description": "Push to a named profile (e.g., 'work-mac', 'home-pc')"
+          }
+        }
+      }
+    },
+    {
+      "name": "clawpack_restore",
+      "description": "Restore OpenClaw configuration from GitHub Gist, repository, or named profile.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Gist ID, profile name (e.g., 'work-mac'), or repo (owner/repo). Optional if user has a default profile."
+          },
+          "full": {
+            "type": "boolean",
+            "description": "Restore full configuration (not just skills) - recommended"
+          }
+        }
+      }
+    },
+    {
+      "name": "clawpack_profileList",
+      "description": "List all backup profiles with their nicknames. Use this to show user their saved configurations.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "clawpack_profileAdd",
+      "description": "Add a new backup profile with a nickname. Use this when user wants to save a Gist ID with a memorable name like 'work-mac' or 'home-pc'.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nickname for this profile (e.g., 'work-mac', 'home-pc', 'laptop')"
+          },
+          "gistId": {
+            "type": "string",
+            "description": "The Gist ID (32-character hex string)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description for this profile"
+          }
+        },
+        "required": ["name", "gistId"]
+      }
+    },
+    {
+      "name": "clawpack_profileUse",
+      "description": "Switch to a different backup profile. Use this when user wants to change their default configuration.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the profile to switch to"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "clawpack_profileRemove",
+      "description": "Remove a backup profile. Use this when user no longer needs a saved configuration.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the profile to remove"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "clawpack_status",
+      "description": "Check clawpack installation status and GitHub authentication. Use this to verify setup.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "clawpack_list",
+      "description": "List all installed OpenClaw skills. Shows what would be backed up.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}

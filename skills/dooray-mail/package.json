@@ -1,0 +1,37 @@
+{
+  "name": "dooray-mail-cli",
+  "version": "0.2.4",
+  "description": "Dooray mail CLI for OpenClaw Skill - IMAP/SMTP integration",
+  "main": "./dist/mail-client.js",
+  "bin": {
+    "dooray-cli": "dooray-cli.js"
+  },
+  "files": [
+    "dist/",
+    "dooray-cli.js",
+    "SKILL.md",
+    "README.md"
+  ],
+  "keywords": [
+    "openclaw",
+    "dooray",
+    "mail",
+    "cli",
+    "skill",
+    "imap",
+    "smtp"
+  ],
+  "author": "Anonymous",
+  "license": "MIT",
+  "scripts": {
+    "release:patch": "npm version patch && git push && git push --tags",
+    "release:minor": "npm version minor && git push && git push --tags",
+    "release:major": "npm version major && git push && git push --tags"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "imap-simple": "^5.1.0",
+    "mailparser": "^3.6.0",
+    "nodemailer": "^6.9.0"
+  }
+}

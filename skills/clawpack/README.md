@@ -1,0 +1,130 @@
+# Clawpack Skill for OpenClaw
+
+让 OpenClaw 直接管理配置备份和恢复，无需手动运行命令。
+
+## 版本
+
+- **v1.2.0** - 废弃 push 命令，统一使用 backup
+- **v1.1.0** - 支持多配置管理（profile）
+- **v1.0.0** - 初始版本
+
+## 安装
+
+```bash
+npm install -g clawpack-skill
+```
+
+## 使用方法
+
+安装后，你可以直接通过对话使用 clawpack：
+
+### Quick Start 1：本地打包（无需 GitHub）
+
+```
+用户：帮我打包当前配置
+AI：我来帮你打包 OpenClaw 配置...
+    [使用 clawpack_pack 工具]
+    ✅ 配置已打包：clawpack-backup-1234567890.zip
+    
+用户：解压 backup.zip
+AI：正在解压...
+    [使用 clawpack_unpack 工具]
+    ✅ 配置已恢复！
+```
+
+### Quick Start 2：多配置管理
+
+```
+用户：我有 3 台电脑，帮我设置
+AI：我来帮你设置配置...
+    [使用 clawpack_profileAdd 添加 work-mac, home-pc, laptop]
+    ✅ 已添加 3 个配置
+
+用户：备份到公司电脑
+AI：正在推送到 "work-mac" 配置...
+    [使用 clawpack_backup --profile work-mac]
+    ✅ 已备份！
+
+用户：家用电脑同步公司配置
+AI：正在从 "work-mac" 恢复...
+    [使用 clawpack_restore work-mac]
+    ✅ 同步完成！
+```
+
+## 可用工具
+
+### 本地打包（无需 GitHub）
+
+| 工具 | 用途 | 示例对话 |
+|------|------|----------|
+| `clawpack_pack` | 打包配置到本地文件 | "帮我打包配置" |
+| `clawpack_unpack` | 从本地文件解压 | "解压 backup.zip" |
+
+### 多配置管理
+
+| 工具 | 用途 | 示例对话 |
+|------|------|----------|
+| `clawpack_profileList` | 列出所有配置 | "查看我的配置" |
+| `clawpack_profileAdd` | 添加新配置 | "添加 work-mac 配置" |
+| `clawpack_profileUse` | 切换配置 | "切换到 work-mac" |
+| `clawpack_profileRemove` | 删除配置 | "删除旧配置" |
+
+### GitHub 云端备份
+
+| 工具 | 用途 | 示例对话 |
+|------|------|----------|
+| `clawpack_backup` | 备份到 GitHub | "备份到云端" |
+| `clawpack_restore` | 从 GitHub 恢复 | "从云端恢复" |
+| `clawpack_status` | 检查状态 | "检查 clawpack 状态" |
+| `clawpack_list` | 列出技能 | "我有几个技能" |
+
+## 完整示例
+
+### 示例 1：本地打包迁移
+
+```
+用户：我要换电脑了，怎么迁移配置？
+AI：我来帮你打包配置...
+    
+AI：✅ 配置已打包：clawpack-backup-1234567890.zip
+   文件位置：/Users/ray/clawpack-backup-1234567890.zip
+   
+AI：请将这个文件复制到新电脑，然后运行：
+   clawpack unpack clawpack-backup-1234567890.zip
+```
+
+### 示例 2：多设备管理
+
+```
+用户：我想统一管理 3 台电脑的配置
+AI：好的，我来帮你设置...
+
+AI：请告诉我你的 Gist ID，或者我先帮你创建一个备份？
+用户：我有 Gist ID: abc123
+
+AI：✅ 已添加 "work-mac" 配置 (Gist: abc123)
+   你可以使用 "work-mac" 昵称代替难记的 Gist ID 了！
+
+用户：查看所有配置
+AI：📋 你有 2 个配置：
+   ▶ work-mac ★ 当前使用
+     Gist ID: abc123
+     描述: 公司 MacBook
+   
+   home-pc
+     Gist ID: def456
+     描述: 家用电脑
+
+用户：切换到家用配置
+AI：✅ 已切换到 "home-pc" 配置
+   后续操作将使用此配置
+```
+
+## 依赖
+
+- clawpack >= 1.5.0
+- OpenClaw >= 2026.2.0
+
+## License
+
+MIT

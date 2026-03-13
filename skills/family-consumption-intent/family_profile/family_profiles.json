@@ -1,0 +1,45 @@
+{
+  "families": [
+    {
+      "family_id": "family_1",
+      "family_name": "吴海超家",
+      "members": [
+        "爸爸",
+        "妈妈",
+        "孩子"
+      ],
+      "children_age": [],
+      "income_level": "高",
+      "consume_style": "大方",
+      "preferred_brands": [],
+      "historical_consumption": {},
+      "budget_range": {},
+      "has_child": true,
+      "has_elderly": false,
+      "has_pregnant": false,
+      "created_at": "2026-03-13T09:30:49.609207",
+      "updated_at": "2026-03-13T09:30:49.609216"
+    },
+    {
+      "family_id": "family_2",
+      "family_name": "吴海超家",
+      "members": [
+        "爸爸",
+        "妈妈",
+        "孩子"
+      ],
+      "children_age": [],
+      "income_level": "高",
+      "consume_style": "大方",
+      "preferred_brands": [],
+      "historical_consumption": {},
+      "budget_range": {},
+      "has_child": true,
+      "has_elderly": false,
+      "has_pregnant": false,
+      "created_at": "2026-03-13T09:31:01.690829",
+      "updated_at": "2026-03-13T09:31:01.690838"
+    }
+  ],
+  "version": "1.0"
+}

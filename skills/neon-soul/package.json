@@ -1,0 +1,64 @@
+{
+  "name": "neon-soul",
+  "version": "0.2.1",
+  "description": "AI Identity Through Grounded Principles - OpenClaw skill for soul synthesis",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./skill": {
+      "import": "./dist/skill-entry.js",
+      "types": "./dist/skill-entry.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "vcr:record": "npx tsx scripts/record-vcr-fixtures.ts",
+    "vcr:analyze": "npx tsx scripts/analyze-clustering.ts"
+  },
+  "keywords": [
+    "openclaw",
+    "skill",
+    "soul",
+    "identity",
+    "embeddings",
+    "compression"
+  ],
+  "author": "Multiverse Team",
+  "license": "MIT",
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "lru-cache": "^11.2.5",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "files": [
+    "dist",
+    "skill",
+    "!skill/.env",
+    "!**/.env"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geeks-accelerator/neon-soul.git"
+  },
+  "homepage": "https://liveneon.ai"
+}
