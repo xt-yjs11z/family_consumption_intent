@@ -1,0 +1,95 @@
+{
+  "providers": {
+    "qwen-portal": {
+      "baseUrl": "https://portal.qwen.ai/v1",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "coder-model",
+          "name": "Qwen Coder",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        },
+        {
+          "id": "vision-model",
+          "name": "Qwen Vision",
+          "reasoning": false,
+          "input": [
+            "text",
+            "image"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        }
+      ],
+      "apiKey": "qwen-oauth"
+    },
+    "minimax": {
+      "baseUrl": "https://api.minimaxi.com/v1",
+      "apiKey": "sk-cp-0mOyo4266Euze4S51QEb3BZqfr52Y_BkxRL-LrhfRqPzjIbsCh4EI7Nh2SM7bW4dIJoANFfgdFNrUcPQzDKQJy5K_I2SMBWphj0NsJRISfd5pRvTmQF0SD8",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "MiniMax-M2.5",
+          "name": "MiniMax M2.5",
+          "cost": {
+            "input": 0.001,
+            "output": 0.004,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        }
+      ]
+    },
+    "minimax-cn": {
+      "baseUrl": "https://api.minimaxi.com/anthropic",
+      "api": "anthropic-messages",
+      "authHeader": true,
+      "models": [
+        {
+          "id": "MiniMax-M2.5",
+          "name": "MiniMax M2.5",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0.3,
+            "output": 1.2,
+            "cacheRead": 0.03,
+            "cacheWrite": 0.12
+          },
+          "contextWindow": 200000,
+          "maxTokens": 8192,
+          "api": "anthropic-messages"
+        }
+      ],
+      "apiKey": "sk-cp-0mOyo4266Euze4S51QEb3BZqfr52Y_BkxRL-LrhfRqPzjIbsCh4EI7Nh2SM7bW4dIJoANFfgdFNrUcPQzDKQJy5K_I2SMBWphj0NsJRISfd5pRvTmQF0SD8"
+    }
+  }
+}
