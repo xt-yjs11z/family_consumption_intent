@@ -111,7 +111,7 @@ openclaw start
 
 ```yaml
 family_id: family_1
-family_name: 吴海超家
+family_name: 示例家庭
 income_level: 高
 consume_style: 大方
 has_child: true
