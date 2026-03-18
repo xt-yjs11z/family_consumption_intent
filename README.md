@@ -1,109 +1,91 @@
-# family_consumption_intent - 家庭消费意图识别 Agent
+# 🏠 家庭消费意图识别 Agent
 
-通过飞书消息识别家庭成员消费意图的 AI Agent。
+通过对话识别家庭成员消费意图的 AI Agent，支持意图补全、预算预测和个性化推荐。
 
-## 目录结构
+## 📁 目录结构
 
 ```
 family_consumption_intent/
-├── workspace/                          # Agent 工作目录
-│   ├── IDENTITY.md                   # Agent 身份定义
-│   ├── USER.md                       # 默认用户配置
-│   ├── USER/                         # 用户配置目录
-│   │   ├── USER_wuhaichao.md         # 吴海超的配置
-│   │   ├── USER_lihua.md            # 其他用户配置
-│   │   └── ...
-│   ├── SOUL.md                       # Agent 核心价值观
-│   ├── TOOLS.md                      # 工具说明
-│   ├── AGENTS.md                     # 工作流程规范
-│   ├── HEARTBEAT.md                  # 定期任务
-│   ├── skills/                       # 技能库
-│   │   └── family-consumption-intent/
-│   │       ├── SKILL.md              # 技能规范
-│   │       ├── agent.py              # 主入口
-│   │       ├── intent_detector.py   # 意图识别
-│   │       ├── family_profile/      # 家庭画像
-│   │       ├── slots/               # 槽位填充
-│   │       ├── recommendation/      # 推荐系统
-│   │       └── memory/              # 记忆存储
-│   ├── memory/                       # 用户记忆文件
-│   │   ├── wuhaichao.md
-│   │   └── ...
-│   └── .openclaw/                    # OpenClaw 配置
+├── workspace/                      # Agent 工作目录
+│   ├── skills/                    # 技能模块
+│   │   ├── agent.py               # 🧠 主入口（整合各模块）
+│   │   ├── intent_detector.py    # 🎯 意图识别
+│   │   ├── slots/                # 槽位填充
+│   │   │   └── slot_filler.py
+│   │   ├── family_profile/        # 👨‍👩‍👧 家庭画像
+│   │   │   └── family_profile.py
+│   │   ├── recommendation/       # 💡 推荐系统
+│   │   │   └── recommender.py
+│   │   └── memory/                # 📝 记忆存储
+│   │       └── consumption_memory.py
+│   ├── USER/                      # 用户配置目录
+│   │   └── USER_{userId}.md
+│   └── memory/                    # 用户记忆
 │
-├── agent-config/                     # Agent 运行配置
-│   └── family_consumption_intent/
-│       ├── agent/                    # 模型配置
-│       │   ├── models.json
-│       │   └── auth-profiles.json
-│       └── sessions/                 # 会话存储
-│
-└── config/                          # OpenClaw 配置
-    └── family-consumption-intent.json
+└── agent-config/                  # 运行时配置
+    ├── agent/                     # 模型配置
+    └── sessions/                  # 会话存储
 ```
 
-## 功能 Features
+## 🔧 核心模块
 
-| 能力 | 说明 |
-|------|------|
-| 🎯 意图识别 | 从飞书消息识别消费意图（商品+对象） |
-| 💬 自动追问 | 信息不完整时智能追问 |
-| 👥 多家庭支持 | 管理多个家庭成员不同消费特征 |
-| 📝 记忆存储 | 记录用户消费历史和偏好 |
+| 模块 | 文件 | 功能 |
+|------|------|------|
+| 🧠 Agent | `agent.py` | 主控制器，协调各模块 |
+| 🎯 意图识别 | `intent_detector.py` | 解析消息，提取消费意图 |
+| 📋 槽位填充 | `slots/slot_filler.py` | 检查必填字段，智能追问 |
+| 👨‍👩‍👧 家庭画像 | `family_profile/family_profile.py` | 管理家庭消费特征 |
+| 💡 推荐 | `recommendation/recommender.py` | 生成选购建议 |
+| 📝 记忆 | `memory/consumption_memory.py` | 记录消费历史 |
 
-## 消费意图结构
+## 🎯 功能特性
+
+- **意图识别** - 从自然对话中提取消费意图
+- **智能追问** - 信息不完整时自动追问
+- **预算预测** - 根据家庭画像预测合理预算
+- **多家庭支持** - 管理多个家庭成员
+- **记忆存储** - 记录消费历史，持续优化
+
+## 📊 消费意图结构
 
 ### 必填字段
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
-| target | 消费对象 | 自己、孩子、父母、家庭 |
-| object | 商品 | 手机、电脑、空调 |
+| `target` | 消费对象 | 自己、孩子、父母、家庭 |
+| `object` | 商品 | 手机、电脑、空调 |
 
-### 自动识别字段
+### 可选字段（自动识别）
 
-| 字段 | 说明 | 示例 |
+| 字段 | 说明 | 来源 |
 |------|------|------|
-| intent_type | 商品类别 | digital, appliance, education |
-| scene | 使用场景 | 节日、开学、坏了 |
-| budget | 预算范围 | 根据用户画像预测 |
+| `intent_type` | 商品类别 | 自动识别 |
+| `scene` | 使用场景 | 自动预测 |
+| `budget` | 预算范围 | 家庭画像预测 |
 
-## 消费类型
+### 消费类型
 
-- education（教育/学习）
-- appliance（家电）
-- food（食品）
-- daily（日用品）
-- digital（数码）
-- clothing（服装）
-- entertainment（娱乐）
-- health（医疗保健）
-- service（服务）
-
-## 工作流程
-
-```
-飞书消息 → 意图识别 → 槽位检查 → (追问/输出结果)
-```
-
-### 1. 意图识别
-
-解析消息，提取：
-- 消费对象（target）：自己、孩子、父母、家庭
-- 商品（object）：手机、电脑、空调等
-
-### 2. 槽位检查
-
-检查必填字段是否完整
-
-### 3. 决策
-
-| 状态 | 动作 |
+| 类型 | 说明 |
 |------|------|
-| 信息完整 | 输出识别结果 + 预算预测 + 选购建议 |
-| 信息不完整 | 追问缺失字段 |
+| `digital` | 数码产品 |
+| `appliance` | 家电 |
+| `education` | 教育学习 |
+| `food` | 食品 |
+| `clothing` | 服装 |
+| `daily` | 日用品 |
+| `entertainment` | 娱乐 |
+| `health` | 医疗保健 |
+| `service` | 服务 |
 
-## 快速开始
+## 🔄 工作流程
+
+```
+用户消息 → 意图识别 → 槽位检查 → (追问/输出结果)
+     ↓
+  家庭画像 → 预算预测 → 推荐建议
+```
+
+## 🚀 快速开始
 
 ### 1. 配置飞书机器人
 
@@ -115,29 +97,24 @@ family_consumption_intent/
 openclaw start
 ```
 
-### 3. 测试
+### 3. 对话示例
 
-在飞书中发送消息：
-
-| 对话示例 | 识别结果 |
+| 用户输入 | 识别结果 |
 |----------|----------|
-| 给孩子买手机 | 消费对象：孩子，商品：手机 |
-| 买空调 | 消费对象：家庭，商品：空调 |
-| 过年给父母买礼物 | 消费对象：父母，商品：待补充 |
+| 给孩子买手机 | ✅ 消费对象：孩子，商品：手机，预算：5000-8000 |
+| 买空调 | ✅ 消费对象：家庭，商品：空调 |
+| 我想给父母买点东西 | ❓ 想买什么商品？ |
 
-## 用户配置
+## 👨‍👩‍👧 家庭画像配置
 
-### 配置结构 (USER/USER_{userId}.md)
+### 用户配置 (USER/USER_{userId}.md)
 
-```json
-{
-  "family_id": "family_1",
-  "family_name": "吴海超家",
-  "members": ["爸爸", "妈妈", "孩子"],
-  "income_level": "高",
-  "consume_style": "大方",
-  "has_child": true
-}
+```yaml
+family_id: family_1
+family_name: 吴海超家
+income_level: 高
+consume_style: 大方
+has_child: true
 ```
 
 ### 消费风格与预算
@@ -150,36 +127,30 @@ openclaw start
 | 大方 | 5000-8000 | 6000-10000 | 500-1000 |
 | 奢侈 | 10000+ | 10000+ | 1000+ |
 
-## 对话示例
+## ⚠️ 追问规则
 
-### 完整识别
+- 追问时只显示问题，不显示选项列表
+- 追问优先级：消费对象 > 商品
 
-```
-用户：给孩子买手机
-Agent：✅ 识别完成！
-  - 消费对象：孩子
-  - 商品：手机
-  - 类型：digital
-  - 预算：5000-8000
-  - 建议：...
-```
-
-### 需要追问
+## 📝 输出示例
 
 ```
-用户：我想买礼物
-Agent：想买什么商品？
+✅ 识别完成！
+- 消费对象：孩子
+- 商品：手机
+- 类型：数码
+- 场景：日常
+- 预算：5000-8000
+- 建议：...
 ```
 
-## 技术栈
+## 🛠️ 技术栈
 
 - **运行时**: OpenClaw
-- **消息通道**: 飞书/Lark
+- **消息通道**: 飞书
 - **语言**: Python 3
 - **模型**: MiniMax
 
-## 注意事项
+## 📄 许可证
 
-- 追问时只显示问题，不显示选项列表
-- 不推荐具体产品型号，只提供选购方向
-- 模糊词（礼物、东西）不识别为商品
+MIT
