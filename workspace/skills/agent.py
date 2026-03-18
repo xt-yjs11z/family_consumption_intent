@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "recommendation"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "memory"))
 
 from intent_detector import detect_intent, format_intent
-from slot_filler import check_and_fill, format_question, format_intent_summary
+from slot_filler import check_and_fill, format_question, format_intent_summary, get_suggestions
 from family_profile import FamilyProfileManager
 from recommender import Recommender, format_recommendations
 from consumption_memory import ConsumptionMemory
@@ -50,6 +50,11 @@ class ConsumptionAgent:
         Returns:
             str: Agent 响应
         """
+        # 0. 检查闲聊模式前缀
+        if message.strip().startswith("+"):
+            # 闲聊模式，直接回复
+            return "你好！有什么可以帮你的吗？"
+        
         # 设置家庭
         if family_id:
             self.set_family(family_id)
@@ -62,6 +67,10 @@ class ConsumptionAgent:
         # 1. 意图识别
         intent = detect_intent(message)
         self.current_intent.update(intent)
+        
+        # 1.5 如果没有识别到任何消费类型，回复没识别到消费意图
+        if not intent.get("intent_type"):
+            return "没识别到消费意图"
         
         # 2. 槽位检查
         slot_result = check_and_fill(self.current_intent)
@@ -97,8 +106,12 @@ class ConsumptionAgent:
             )
         
         # 7. 输出结果
-        response = format_intent_summary(self.current_intent)
-        response += "\n\n" + format_recommendations(rec_result)
+        response = "✅ 识别完成！\n意图识别：家庭消费\n" + format_intent_summary(self.current_intent)
+        
+        # 添加选购建议
+        suggestions = get_suggestions(self.current_intent, family_context)
+        if suggestions:
+            response += "\n选购建议：\n" + "\n".join([f"- {s}" for s in suggestions])
         
         # 重置当前意图
         self.current_intent = {}

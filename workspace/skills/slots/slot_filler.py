@@ -95,9 +95,24 @@ def check_completeness(intent: Dict) -> Dict:
     """
     missing_fields = []
     
+    # 检查必填字段
     for field in REQUIRED_FIELDS:
         if not intent.get(field):
             missing_fields.append(field)
+    
+    # 模糊词检查：如果只有"礼物"等模糊词，没有具体商品，需要追问商品
+    keywords = intent.get('keywords', [])
+    vague_keywords = ['礼物', '东西', '物件', '物品']
+    specific_product_keywords = ['玩具', '游戏', '电影', '旅游', '手机', '电脑', '空调', '衣服', '鞋子', 
+                                  '电视', '冰箱', '洗衣机', '平板', '耳机', '相机', '手表', '项链', 
+                                  '化妆品', '口红', '面霜', '篮球', '足球']
+    
+    has_specific = any(kw in specific_product_keywords for kw in keywords)
+    
+    # 如果没有具体商品关键词，只有模糊词，需要追问商品
+    if not has_specific and any(kw in vague_keywords for kw in keywords):
+        if 'object' not in missing_fields:
+            missing_fields.append('object')
     
     return {
         "is_complete": len(missing_fields) == 0,
@@ -164,36 +179,224 @@ def format_question(question: Dict) -> str:
     Returns:
         str: 格式化的追问文本
     """
-    lines = [question["question"], ""]
-    
-    if question.get("options"):
-        for opt in question["options"]:
-            lines.append(opt["label"])
-    else:
-        lines.append("（请直接告诉我）")
-    
-    return "\n".join(lines)
+    # 直接返回问题，不显示选项列表
+    return question["question"]
 
+
+# 类别中文映射
+TYPE_MAP = {
+    'digital': '数码',
+    'appliance': '家电', 
+    'food': '食品',
+    'daily': '日用',
+    'clothing': '服饰',
+    'entertainment': '娱乐',
+    'health': '健康',
+    'service': '服务',
+    'sports': '运动',
+    'beauty': '美妆',
+    'pet': '宠物',
+    'car': '汽车',
+    'furniture': '家具',
+    'baby': '母婴',
+    'education': '教育'
+}
+
+TIME_MAP = {
+    'now': '立即购买',
+    'soon': '近期购买',
+    'future': '计划购买'
+}
+
+# 从关键词推断商品
+def infer_object(intent: Dict) -> str:
+    """从关键词推断商品名称"""
+    keywords = intent.get('keywords', [])
+    intent_type = intent.get('intent_type')
+    
+    # 类型到商品的映射
+    type_to_product = {
+        'digital': '数码产品',
+        'appliance': '家电',
+        'food': '食品',
+        'daily': '日用品',
+        'clothing': '服饰',
+        'entertainment': '玩具/娱乐',
+        'health': '保健品',
+        'service': '服务',
+        'sports': '运动用品',
+        'beauty': '美妆用品',
+        'pet': '宠物用品',
+        'car': '汽车用品',
+        'furniture': '家具',
+        'baby': '母婴用品',
+        'education': '学习用品'
+    }
+    
+    # 常见商品关键词
+    product_keywords = {
+        '手机': '手机', '电脑': '电脑', '平板': '平板', '耳机': '耳机',
+        '空调': '空调', '冰箱': '冰箱', '洗衣机': '洗衣机', '电视': '电视',
+        '衣服': '衣服', '鞋子': '鞋子', '裤子': '裤子', '包': '包',
+        '玩具': '玩具', '游戏': '游戏', '电影': '电影',
+        '水果': '水果', '零食': '零食', '牛奶': '牛奶', '大米': '大米',
+        '篮球': '篮球', '足球': '足球', '跑步机': '跑步机', '瑜伽垫': '瑜伽垫',
+        '化妆品': '化妆品', '面霜': '面霜', '口红': '口红',
+        '礼物': '礼物', '手表': '手表',
+        '项链': '项链', '戒指': '戒指', '耳环': '耳环', '手链': '手链'
+    }
+    
+    # 先从关键词中找具体商品
+    for kw in keywords:
+        if kw in product_keywords:
+            return product_keywords[kw]
+    
+    # 没找到则用类型推断
+    if intent_type in type_to_product:
+        return type_to_product[intent_type]
+    
+    return '商品'
 
 def format_intent_summary(intent: Dict) -> str:
     """格式化当前意图信息"""
-    lines = ["📋 当前信息：", ""]
+    lines = []
     
-    for field, name in FIELD_NAMES.items():
-        value = intent.get(field)
+    # 固定顺序输出
+    field_order = ['target', 'object', 'intent_type', 'scene', 'budget', 'time']
+    field_names = {
+        'target': '消费对象',
+        'object': '商品',
+        'intent_type': '类别',
+        'scene': '场景',
+        'budget': '预算',
+        'time': '时间'
+    }
+    
+    for field in field_order:
+        value = None
+        
+        if field == 'object':
+            value = infer_object(intent)
+        else:
+            value = intent.get(field)
+        
+        # 场景：如果没有识别到，则默认显示"日常"
+        if field == 'scene' and not value:
+            value = '日常'
+        
         if value:
+            # 类型转换
+            if field == "intent_type":
+                value = TYPE_MAP.get(value, value)
+            elif field == "time":
+                value = TIME_MAP.get(value, value)
+            
             if field == "budget" and isinstance(value, dict):
                 if value.get("type") == "exact":
-                    lines.append(f"  {name}: {value['min']}元")
+                    lines.append(f"- {field_names[field]}：{value['min']}元")
                 else:
-                    lines.append(f"  {name}: {value['min']}-{value['max']}元")
-            else:
-                lines.append(f"  {name}: {value}")
+                    lines.append(f"- {field_names[field]}：{value['min']}-{value['max']}元")
+            elif field != 'object' or value != '商品':  # 排除未识别的object
+                lines.append(f"- {field_names[field]}：{value}")
     
     return "\n".join(lines)
 
 
+# 选购建议模板
+SUGGESTION_TEMPLATES = {
+    'digital': [
+        '预算范围内优先选择主流品牌机型',
+        '关注屏幕素质和续航表现',
+        '建议到正规渠道购买，售后更有保障'
+    ],
+    'appliance': [
+        '根据家庭空间选择合适尺寸',
+        '关注能效等级，节能省电',
+        '建议选择主流品牌，售后更放心'
+    ],
+    'clothing': [
+        '预算范围内选择适合自己风格的款式',
+        '建议到实体店试穿后购买',
+        '关注面料舒适度和做工'
+    ],
+    'entertainment': [
+        '根据使用场景选择合适类型',
+        '关注产品安全性',
+        '建议到正规渠道购买'
+    ],
+    'sports': [
+        '根据使用频率选择合适档次',
+        '关注产品质量和安全性',
+        '建议到正规体育用品店购买'
+    ],
+    'beauty': [
+        '根据肤质选择合适产品',
+        '建议先试用小样',
+        '关注产品成分和保质期'
+    ],
+    'food': [
+        '关注生产日期和保质期',
+        '选择正规渠道购买',
+        '注意保存条件'
+    ],
+    'health': [
+        '遵医嘱或专业人士建议',
+        '选择正规渠道购买',
+        '关注产品资质和口碑'
+    ],
+    'service': [
+        '可通过App/微信/支付宝在线办理',
+        '建议绑定自动扣费，避免遗忘'
+    ],
+    'default': [
+        '根据实际需求选择',
+        '建议到正规渠道购买',
+        '关注售后保障'
+    ]
+}
+
+def get_suggestions(intent: Dict, family_context: Dict = None) -> list:
+    """获取选购建议"""
+    intent_type = intent.get('intent_type', 'default')
+    target = intent.get('target', '自己')
+    budget = intent.get('budget')
+    consume_style = family_context.get('consume_style', '理性') if family_context else '理性'
+    
+    suggestions = []
+    
+    # 预算范围映射（根据消费风格）
+    budget_ranges = {
+        '节俭': {'digital': '1000-2000', 'appliance': '2000-3000', 'clothing': '500-1000'},
+        '理性': {'digital': '2000-4000', 'appliance': '3000-5000', 'clothing': '1000-2000'},
+        '适度': {'digital': '3000-5000', 'appliance': '4000-6000', 'clothing': '2000-3000'},
+        '大方': {'digital': '5000-8000', 'appliance': '6000-10000', 'clothing': '3000-5000'}
+    }
+    
+    # 添加预算建议
+    if not budget:
+        # 根据类型和风格推断预算
+        range_info = budget_ranges.get(consume_style, {}).get(intent_type)
+        if range_info:
+            suggestions.append(f'参考预算：{range_info}元（{consume_style}风格）')
+    
+    # 根据类型获取建议
+    type_suggestions = SUGGESTION_TEMPLATES.get(intent_type, SUGGESTION_TEMPLATES['default'])
+    suggestions.extend(type_suggestions[:2])  # 最多2条类型建议
+    
+    # 根据消费对象添加建议
+    if target == '孩子':
+        suggestions.append('注意产品安全性和适用年龄')
+    elif target == '父母':
+        suggestions.append('考虑操作简便性')
+    elif target == '老人':
+        suggestions.append('考虑操作简便和安全性')
+    
+    return suggestions[:3]  # 最多返回3条
+
+
 if __name__ == "__main__":
+    import sys
+    import json
     import sys
     import json
     
