@@ -9,18 +9,19 @@ family_consumption_intent/
 ├── workspace/                      # Agent 工作目录
 │   ├── skills/                    # 技能模块
 │   │   ├── agent.py               # 🧠 主入口（整合各模块）
-│   │   ├── intent_detector.py    # 🎯 意图识别
-│   │   ├── slots/                # 槽位填充
+│   │   ├── intent_detector.py     # 🎯 意图识别
+│   │   ├── slots/                 # 槽位填充
 │   │   │   └── slot_filler.py
 │   │   ├── family_profile/        # 👨‍👩‍👧 家庭画像
 │   │   │   └── family_profile.py
-│   │   ├── recommendation/       # 💡 推荐系统
+│   │   ├── recommendation/        # 💡 推荐系统
 │   │   │   └── recommender.py
 │   │   └── memory/                # 📝 记忆存储
 │   │       └── consumption_memory.py
 │   ├── USER/                      # 用户配置目录
 │   │   └── USER_{userId}.md
-│   └── memory/                    # 用户记忆
+│   ├── memory/                    # 用户记忆
+│   └── AGENTS.md / SOUL.md / IDENTITY.md  # Agent 配置
 │
 └── agent-config/                  # 运行时配置
     ├── agent/                     # 模型配置
