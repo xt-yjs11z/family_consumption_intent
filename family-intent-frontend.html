@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭消费意图识别</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #444;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 24px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .intent-tag {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .entities {
+            margin-top: 12px;
+        }
+        
+        .entity-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .entity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .entity-label {
+            color: #666;
+            font-size: 14px;
+            min-width: 70px;
+        }
+        
+        .entity-value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .history {
+            margin-top: 24px;
+        }
+        
+        .history-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .history-item {
+            padding: 10px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .history-item:hover {
+            background: #e8e8e8;
+        }
+        
+        .history-text {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .history-intent {
+            color: #667eea;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-dot.online {
+            background: #4caf50;
+        }
+        
+        .status-dot.offline {
+            background: #f44336;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #f0f0f0;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .profile-form {
+            display: none;
+        }
+        
+        .profile-form.show {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #444;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item:hover {
+            background: #e8e8e8;
+        }
+        
+        .profile-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .profile-success.show {
+            display: block;
+        }
+        
+        .profile-info {
+            background: #f0f7ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .profile-info div {
+            padding: 4px 0;
+        }
+        
+        .image-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .image-upload input {
+            display: none;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            display: none;
+            margin-top: 12px;
+        }
+        
+        .image-preview.show {
+            display: block;
+        }
+        
+        .ocr-text {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #666;
+            display: none;
+        }
+        
+        .ocr-text.show {
+            display: block;
+        }
+        
+        .ocr-text strong {
+            color: #333;
+        }
+        
+        .chat-container {
+            display: none;
+            height: 400px;
+            flex-direction: column;
+        }
+        
+        .chat-container.show {
+            display: flex;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .chat-message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .chat-message.assistant {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .chat-message.error {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+        
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            min-height: 44px;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .chat-send {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .chat-send:hover {
+            transform: translateY(-2px);
+        }
+        
+        .chat-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .typing-indicator {
+            display: inline-block;
+            padding: 10px 14px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite both;
+        }
+        
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* 结果卡片样式 */
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .main-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .main-card .card-title {
+            color: white;
+        }
+        
+        .main-card .card-label {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .main-card .card-value {
+            color: white;
+        }
+        
+        .main-card .card-value.highlight {
+            color: #ffd700;
+            font-weight: 700;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .card-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .card-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .card-value.highlight {
+            color: #667eea;
+            font-size: 16px;
+        }
+        
+        .profile-card {
+            background: #f0f7ff;
+        }
+        
+        .family-card {
+            background: #fff8e0;
+        }
+        
+        .profile-text {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .special-tags {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* 聊天消息Markdown样式 */
+        .chat-message strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .chat-message .chat-icon {
+            margin-right: 4px;
+        }
+        
+        .chat-message br {
+            margin-bottom: 4px;
+        }
+        
+        /* 发送栏下方的意图识别卡片 */
+        .chat-intent-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 12px;
+            color: white;
+        }
+        
+        .intent-card-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .intent-card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .intent-card-item {
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+        }
+        
+        .intent-card-item span:first-child {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2px;
+        }
+        
+        .intent-card-item span:last-child {
+            font-weight: 600;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎯 家庭消费意图识别</h1>
+            <p class="subtitle">智能识别您的消费意图</p>
+            
+            <div class="api-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">检查API状态...</span>
+            </div>
+            
+            <div class="tab-container">
+                <button class="tab-btn active" id="tabRecognize" onclick="switchTab('recognize')">🎯 意图识别</button>
+                <button class="tab-btn" id="tabChat" onclick="switchTab('chat')">💬 LLM 对话</button>
+                <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">🏠 家庭画像</button>
+            </div>
+            
+            <!-- 意图识别页面 -->
+            <div id="recognizePage">
+            
+            <div class="input-group">
+                <label>API 地址：</label>
+                <input type="text" id="apiUrlInput" value="http://192.168.11.11:5000" 
+                    style="width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;"
+                    onchange="updateApiUrl()">
+            </div>
+            
+            <div class="input-group">
+                <label for="textInput">请输入您的消费相关描述：</label>
+                <textarea 
+                    id="textInput" 
+                    placeholder="例如：想买一台电脑"、"本月花了多少钱"、"有什么推荐"
+                    rows="3"
+                ></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label>或上传图片识别（截图、发票、商品图）：</label>
+                <div class="image-upload" onclick="document.getElementById('imageInput').click()">
+                    <span id="uploadText">📷 点击上传图片</span>
+                    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+                    <img id="imagePreview" class="image-preview" alt="预览">
+                </div>
+                <div class="ocr-text" id="ocrText"></div>
+            </div>
+            
+            <button class="btn" id="submitBtn" onclick="recognizeIntent()">
+                识别意图
+            </button>
+            
+            <div class="error" id="error"></div>
+            
+            <div class="result" id="result">
+                <div class="result-title">
+                    识别结果
+                    <span class="intent-tag" id="intentTag"></span>
+                </div>
+                <div>置信度：<span id="confidenceText">0%</span></div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceBar"></div>
+                </div>
+                <div class="entities" id="entities"></div>
+            </div>
+            
+            <div class="history" id="historySection" style="display: none;">
+                <div class="history-title">历史记录</div>
+                <div id="historyList"></div>
+            </div>
+            </div>
+            
+            <!-- LLM 对话页面 -->
+            <div id="chatPage" class="profile-form">
+                <div class="chat-container show" id="chatContainer">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message assistant">
+                            👋 你好！我是家庭消费意图助手，可以帮你：
+                            <br>• 识别消费意图
+                            <br>• 推荐商品
+                            <br>• 分析购物需求
+                            <br><br>有什么可以帮你的？
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <textarea class="chat-input" id="chatInput" placeholder="输入消息..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+                        <button class="chat-send" id="chatSendBtn" onclick="sendChat()">发送</button>
+                    </div>
+                </div>
+                <!-- 意图识别结果展示（和意图识别Tab一样） -->
+                <div class="result" id="chatResult">
+                    <div class="result-title">
+                        识别结果
+                        <span class="intent-tag" id="chatIntentTag"></span>
+                    </div>
+                    <div>置信度：<span id="chatConfidenceText">0%</span></div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="chatConfidenceBar"></div>
+                    </div>
+                    <div class="entities" id="chatEntities"></div>
+                </div>
+            </div>
+            
+            <!-- 家庭画像设置页面 -->
+            <div id="profilePage" class="profile-form">
+                <div class="profile-success" id="profileSuccess">✅ 保存成功！</div>
+                
+                <div class="profile-info" id="profileInfo">
+                    <div style="font-weight:600;margin-bottom:8px;">当前画像：</div>
+                    <div id="currentProfile"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>🏠 家庭名称：</label>
+                    <input type="text" id="familyName" placeholder="例如：吴海超家">
+                </div>
+                
+                <div class="form-group">
+                    <label>👨‍👩‍👧 成员（用逗号分隔）：</label>
+                    <input type="text" id="members" placeholder="例如：爸爸,妈妈,小孩">
+                </div>
+                
+                <div class="form-group">
+                    <label>💰 收入水平：</label>
+                    <select id="incomeLevel">
+                        <option value="低">低收入</option>
+                        <option value="中等" selected>中等收入</option>
+                        <option value="高">高收入</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>🛒 消费习惯：</label>
+                    <select id="spendingHabit">
+                        <option value="节俭">节俭</option>
+                        <option value="中等" selected>中等</option>
+                        <option value="大方">大方</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>特殊成员：</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="hasChild"> 👶 有小孩
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="hasElderly"> 👴 有老人
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="hasPregnant"> 🤰 孕妇
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="saveProfile()">保存画像</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从URL参数或自动检测获取API地址
+        const urlParams = new URLSearchParams(window.location.search);
+        let API_URL = urlParams.get('api');
+        
+        if (!API_URL) {
+            // 尝试从当前主机名推断
+            const host = window.location.hostname;
+            API_URL = host === 'localhost' || host === '127.0.0.1' 
+                ? 'http://localhost:5000' 
+                : 'http://' + host + ':5000';
+        }
+        
+        // 允许用户手动修改API地址
+        function updateApiUrl() {
+            const input = document.getElementById('apiUrlInput').value.trim();
+            if (input) {
+                API_URL = input;
+                checkStatus();
+            }
+        }
+        
+        // Tab 切换
+        function switchTab(tab) {
+            document.getElementById('tabRecognize').className = tab === 'recognize' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tabChat').className = tab === 'chat' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tabProfile').className = tab === 'profile' ? 'tab-btn active' : 'tab-btn';
+            
+            document.getElementById('recognizePage').style.display = tab === 'recognize' ? 'block' : 'none';
+            document.getElementById('chatPage').className = tab === 'chat' ? 'profile-form show' : 'profile-form';
+            document.getElementById('profilePage').className = tab === 'profile' ? 'profile-form show' : 'profile-form';
+            
+            if (tab === 'profile') {
+                loadProfile();
+            }
+        }
+        
+        // 加载家庭画像
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_URL}/profile`);
+                const profile = await res.json();
+                
+                document.getElementById('familyName').value = profile.family_name || '';
+                document.getElementById('members').value = profile.members ? profile.members.join(',') : '';
+                document.getElementById('incomeLevel').value = profile.income_level || '中等';
+                document.getElementById('spendingHabit').value = profile.spending_habit || '中等';
+                document.getElementById('hasChild').checked = profile.has_child || false;
+                document.getElementById('hasElderly').checked = profile.has_elderly || false;
+                document.getElementById('hasPregnant').checked = profile.has_pregnant || false;
+                
+                // 显示当前画像
+                let infoHtml = '';
+                if (profile.family_name) infoHtml += `<div>🏠 家庭：${profile.family_name}</div>`;
+                if (profile.members && profile.members.length) infoHtml += `<div>👨‍👩‍👧 成员：${profile.members.join(', ')}</div>`;
+                infoHtml += `<div>💰 收入：${profile.income_level || '-'}</div>`;
+                infoHtml += `<div>🛒 消费：${profile.spending_habit || '-'}</div>`;
+                let special = [];
+                if (profile.has_child) special.push('小孩');
+                if (profile.has_elderly) special.push('老人');
+                if (profile.has_pregnant) special.push('孕妇');
+                if (special.length) infoHtml += `<div>⚠️ 特殊：${special.join(', ')}</div>`;
+                
+                document.getElementById('currentProfile').innerHTML = infoHtml || '未设置';
+                
+            } catch (e) {
+                console.error('加载画像失败', e);
+            }
+        }
+        
+        // 保存家庭画像
+        async function saveProfile() {
+            const familyName = document.getElementById('familyName').value.trim();
+            const membersStr = document.getElementById('members').value.trim();
+            const members = membersStr ? membersStr.split(',').map(m => m.trim()).filter(m => m) : [];
+            
+            const profile = {
+                family_name: familyName,
+                members: members,
+                income_level: document.getElementById('incomeLevel').value,
+                spending_habit: document.getElementById('spendingHabit').value,
+                has_child: document.getElementById('hasChild').checked,
+                has_elderly: document.getElementById('hasElderly').checked,
+                has_pregnant: document.getElementById('hasPregnant').checked
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/profile`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(profile)
+                });
+                
+                if (!res.ok) throw new Error('保存失败');
+                
+                document.getElementById('profileSuccess').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('profileSuccess').classList.remove('show');
+                }, 3000);
+                
+                loadProfile();
+                
+            } catch (e) {
+                alert('保存失败：' + e.message);
+            }
+        }
+        
+        let conversationHistory = [];
+        let chatHistory = [];
+        
+        // 发送聊天消息
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const sendBtn = document.getElementById('chatSendBtn');
+            sendBtn.disabled = true;
+            
+            // 添加用户消息
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // 添加loading
+            const loadingId = addChatMessage('', 'loading');
+            
+            try {
+                // 先进行意图识别
+                const intentRes = await fetch(`${API_URL}/intent`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: message})
+                });
+                const intentData = await intentRes.json();
+                
+                // 调用 LLM 获取回复
+                const chatRes = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: message,
+                        history: chatHistory,
+                        intent: intentData
+                    })
+                });
+                
+                let chatReply = "";
+                if (chatRes.ok) {
+                    const data = await chatRes.json();
+                    chatReply = data.response || "";
+                }
+                
+                // 移除loading
+                document.getElementById(loadingId)?.remove();
+                
+                // 添加助手回复
+                addFormattedMessage(chatReply || "好的，我已经记录了～", 'assistant');
+                
+                // 显示意图识别结果（和意图识别Tab一样）
+                if (intentData.intent) {
+                    displayIntentResult(intentData);
+                } else {
+                    document.getElementById('chatResult').classList.remove('show');
+                }
+                
+                // 保存对话历史
+                chatHistory.push({role: 'user', content: message});
+                chatHistory.push({role: 'assistant', content: chatReply || ""});
+                
+            } catch (e) {
+                document.getElementById(loadingId)?.remove();
+                addChatMessage('抱歉，出错了: ' + e.message, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+        
+        // 添加格式化的消息
+        function addFormattedMessage(content, role) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `chat-message ${role}`;
+            div.innerHTML = content.replace(/\n/g, '<br>');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // 在发送栏下方显示意图识别结果卡片
+        // 在聊天页面显示意图识别结果（和意图识别Tab一样）
+        function displayIntentResult(data) {
+            const result = document.getElementById('chatResult');
+            result.classList.add('show');
+            
+            // 意图标签
+            const intentTag = document.getElementById('chatIntentTag');
+            intentTag.textContent = data.intent ? '✅ 有消费意图' : '❌ 无消费意图';
+            intentTag.style.background = data.intent ? 'linear-gradient(135deg, #4caf50, #45a049)' : '#999';
+            
+            // 置信度
+            const confidence = data.intent ? 85 : 20;
+            document.getElementById('chatConfidenceText').textContent = `${confidence}%`;
+            document.getElementById('chatConfidenceBar').style.width = `${confidence}%`;
+            
+            // 构建卡片展示
+            const entities = document.getElementById('chatEntities');
+            entities.innerHTML = '';
+            
+            let html = `
+                <div class="result-card main-card">
+                    <div class="card-title">🎯 识别结果</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">📂 类别</span>
+                            <span class="card-value highlight">${data.category || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🎯 目标</span>
+                            <span class="card-value highlight">${data.target || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🏠 场景</span>
+                            <span class="card-value">${data.scenario || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">💡 动机</span>
+                            <span class="card-value">${data.motivation || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="card-title">📋 详细信息</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">💰 预算</span>
+                            <span class="card-value">${data.budget || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">⏰ 时间</span>
+                            <span class="card-value">${data.time || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">📍 地点</span>
+                            <span class="card-value">${data.location || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🔧 方式</span>
+                            <span class="card-value">${data.method === 'llm' ? '🤖 LLM' : '📝 规则'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (data.user_profile) {
+                html += `
+                    <div class="result-card profile-card">
+                        <div class="card-title">👤 用户画像</div>
+                        <div class="profile-text">${data.user_profile}</div>
+                    </div>
+                `;
+            }
+            
+            entities.innerHTML = html;
+        }
+        
+        // 添加聊天消息
+        function addChatMessage(content, role) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `chat-message ${role}`;
+            
+            if (role === 'loading') {
+                div.id = 'loading-' + Date.now();
+                div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+            } else {
+                div.textContent = content;
+            }
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return div.id;
+        }
+        
+        // 检查API状态
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API_URL}/health`);
+                const data = await res.json();
+                document.getElementById('statusDot').className = 'status-dot online';
+                document.getElementById('statusText').textContent = 'API 已连接';
+                return true;
+            } catch (e) {
+                document.getElementById('statusDot').className = 'status-dot offline';
+                document.getElementById('statusText').textContent = 'API 未连接，请先启动服务';
+                return false;
+            }
+        }
+        
+        // 意图识别
+        async function recognizeIntent() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                showError('请输入内容');
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '识别中...';
+            hideError();
+            
+            try {
+                const res = await fetch(`${API_URL}/intent`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text})
+                });
+                
+                if (!res.ok) throw new Error('请求失败');
+                
+                const data = await res.json();
+                displayResult(data);
+                addToHistory(text, data);
+                
+            } catch (e) {
+                showError('API未启动，请运行: python3 ~/.openclaw/workspace/skills/family-intent-recognition/api.py');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '识别意图';
+            }
+        }
+        
+        // 处理图片上传
+        let uploadedImageBase64 = null;
+        
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 显示预览
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.classList.add('show');
+                document.getElementById('uploadText').textContent = '✅ 图片已加载，点击更换';
+                
+                // 存储 base64
+                uploadedImageBase64 = e.target.result;
+                
+                // 自动调用 OCR + 意图识别
+                recognizeFromImage();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 从图片识别意图
+        async function recognizeFromImage() {
+            if (!uploadedImageBase64) return;
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '识别中...';
+            hideError();
+            
+            try {
+                const res = await fetch(`${API_URL}/intent/image`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({image: uploadedImageBase64})
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    if (err.error && err.error.includes('OCR')) {
+                        showError('OCR未安装，请在服务器安装: pip install pytesseract tesseract-ocr');
+                    } else {
+                        throw new Error(err.error || '请求失败');
+                    }
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // 显示 OCR 识别的文字
+                if (data.ocr_text) {
+                    const ocrDiv = document.getElementById('ocrText');
+                    ocrDiv.innerHTML = `<strong>📝 OCR识别文字：</strong>${data.ocr_text}`;
+                    ocrDiv.classList.add('show');
+                }
+                
+                // 显示识别结果
+                displayResult(data);
+                
+            } catch (e) {
+                showError('图片识别失败：' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '识别意图';
+            }
+        }
+        
+        // 显示结果
+        function displayResult(data) {
+            const result = document.getElementById('result');
+            result.classList.add('show');
+            
+            // 意图标签 - 大字展示
+            const intentTag = document.getElementById('intentTag');
+            intentTag.textContent = data.intent ? '✅ 有消费意图' : '❌ 无消费意图';
+            intentTag.style.background = data.intent ? 'linear-gradient(135deg, #4caf50, #45a049)' : '#999';
+            
+            // 置信度
+            const confidence = data.intent ? 85 : 20;
+            document.getElementById('confidenceText').textContent = `${confidence}%`;
+            document.getElementById('confidenceBar').style.width = `${confidence}%`;
+            
+            // 构建分组展示
+            const entities = document.getElementById('entities');
+            entities.innerHTML = '';
+            
+            // 核心信息卡片
+            let html = `
+                <div class="result-card main-card">
+                    <div class="card-title">🎯 识别结果</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">📂 类别</span>
+                            <span class="card-value highlight">${data.category || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🎯 目标</span>
+                            <span class="card-value highlight">${data.target || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🏠 场景</span>
+                            <span class="card-value">${data.scenario || '-'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">💡 动机</span>
+                            <span class="card-value">${data.motivation || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="card-title">📋 详细信息</div>
+                    <div class="card-grid">
+                        <div class="card-item">
+                            <span class="card-label">💰 预算</span>
+                            <span class="card-value">${data.budget || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">⏰ 时间</span>
+                            <span class="card-value">${data.time || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">📍 地点</span>
+                            <span class="card-value">${data.location || '未提及'}</span>
+                        </div>
+                        <div class="card-item">
+                            <span class="card-label">🔧 识别方式</span>
+                            <span class="card-value">${data.method === 'llm' ? '🤖 LLM智能识别' : '📝 规则匹配'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 用户画像卡片
+            if (data.user_profile) {
+                html += `
+                    <div class="result-card profile-card">
+                        <div class="card-title">👤 用户画像</div>
+                        <div class="profile-text">${data.user_profile}</div>
+                    </div>
+                `;
+            }
+            
+            // 家庭画像卡片
+            if (data.family_profile) {
+                const profile = data.family_profile;
+                let special = [];
+                if (profile.has_child) special.push('👶 小孩');
+                if (profile.has_elderly) special.push('👴 老人');
+                if (profile.has_pregnant) special.push('🤰 孕妇');
+                
+                html += `
+                    <div class="result-card family-card">
+                        <div class="card-title">🏠 家庭画像</div>
+                        <div class="card-grid">
+                            <div class="card-item"><span class="card-label">家庭</span><span class="card-value">${profile.family_name || '-'}</span></div>
+                            <div class="card-item"><span class="card-label">收入</span><span class="card-value">${profile.income_level || '-'}</span></div>
+                            <div class="card-item"><span class="card-label">消费习惯</span><span class="card-value">${profile.spending_habit || '-'}</span></div>
+                            <div class="card-item"><span class="card-label">成员</span><span class="card-value">${(profile.members || []).join(', ') || '-'}</span></div>
+                        </div>
+                        ${special.length > 0 ? `<div class="special-tags">${special.join(' ')}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            entities.innerHTML = html;
+        }
+        
+        // 添加历史记录（去重：短时间相同内容不重复添加）
+        function addToHistory(text, result) {
+            // 检查最近2条是否有相同内容
+            if (conversationHistory.length > 0 && 
+                conversationHistory[0].text === text &&
+                Date.now() - new Date(conversationHistory[0].time).getTime() < 60000) {
+                return; // 60秒内相同内容不重复添加
+            }
+            
+            conversationHistory.unshift({text, result, time: new Date()});
+            if (conversationHistory.length > 10) conversationHistory.pop();
+            
+            const section = document.getElementById('historySection');
+            section.style.display = 'block';
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = conversationHistory.map((item, i) => `
+                <div class="history-item" onclick="useHistory(${i})">
+                    <div class="history-text">${item.text}</div>
+                    <div class="history-intent">${item.result.intent ? '✅' : '❌'} ${item.result.category || '-'} | ${item.result.target || '-'}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 使用历史记录
+        function useHistory(index) {
+            const item = conversationHistory[index];
+            document.getElementById('textInput').value = item.text;
+            displayResult(item.result);
+        }
+        
+        // 错误提示
+        function showError(msg) {
+            const err = document.getElementById('error');
+            err.textContent = msg;
+            err.classList.add('show');
+        }
+        
+        function hideError() {
+            document.getElementById('error').classList.remove('show');
+        }
+        
+        // 回车提交
+        document.getElementById('textInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                recognizeIntent();
+            }
+        });
+        
+        // 初始化
+        document.getElementById('apiUrlInput').value = API_URL;
+        checkStatus();
+        setInterval(checkStatus, 10000);
+    </script>
+</body>
+</html>
