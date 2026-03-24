@@ -20,17 +20,13 @@
     }
   },
   "lastGood": {
-    "minimax-cn": "minimax-cn:default",
-    "minimax": "minimax:cn"
+    "minimax-cn": "minimax-cn:default"
   },
   "usageStats": {
     "minimax-cn:default": {
-      "lastUsed": 1773794865742,
-      "errorCount": 0
-    },
-    "minimax:cn": {
+      "lastUsed": 1774345881294,
       "errorCount": 0,
-      "lastUsed": 1773804351422
+      "lastFailureAt": 1773906821872
     }
   }
 }
