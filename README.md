@@ -2,52 +2,36 @@
 
 通过对话识别家庭成员消费意图的 AI Agent，支持意图补全、预算预测和个性化推荐。
 
+## ✨ 功能特性
+
+| 功能 | 说明 |
+|------|------|
+| 🎯 意图识别 | 从自然对话中提取消费意图 |
+| 💬 智能追问 | 信息不完整时自动追问确认 |
+| 💰 预算预测 | 根据家庭画像预测合理预算 |
+| 👨‍👩‍👧 多家庭支持 | 管理多个家庭成员 |
+| 📝 记忆存储 | 记录消费历史，持续优化推荐 |
+
 ## 📁 目录结构
 
 ```
 family_consumption_intent/
 ├── workspace/                      # Agent 工作目录
 │   ├── skills/                    # 技能模块
-│   │   ├── agent.py               # 🧠 主入口（整合各模块）
-│   │   ├── intent_detector.py     # 🎯 意图识别
-│   │   ├── slots/                 # 槽位填充
-│   │   │   └── slot_filler.py
-│   │   ├── family_profile/        # 👨‍👩‍👧 家庭画像
-│   │   │   └── family_profile.py
-│   │   ├── recommendation/        # 💡 推荐系统
-│   │   │   └── recommender.py
-│   │   └── memory/                # 📝 记忆存储
-│   │       └── consumption_memory.py
-│   ├── USER/                      # 用户配置目录
-│   │   └── USER_{userId}.md
-│   ├── memory/                    # 用户记忆
-│   └── AGENTS.md / SOUL.md / IDENTITY.md  # Agent 配置
+│   │   ├── agent.py               # 🧠 主入口
+│   │   ├── intent_detector.py    # 🎯 意图识别
+│   │   ├── slots/                # 槽位填充
+│   │   ├── family_profile/       # 👨‍👩‍👧 家庭画像
+│   │   ├── recommendation/      # 💡 推荐系统
+│   │   └── memory/               # 📝 记忆存储
+│   └── USER/                     # 用户配置
 │
 └── agent-config/                  # 运行时配置
     ├── agent/                     # 模型配置
     └── sessions/                  # 会话存储
 ```
 
-## 🔧 核心模块
-
-| 模块 | 文件 | 功能 |
-|------|------|------|
-| 🧠 Agent | `agent.py` | 主控制器，协调各模块 |
-| 🎯 意图识别 | `intent_detector.py` | 解析消息，提取消费意图 |
-| 📋 槽位填充 | `slots/slot_filler.py` | 检查必填字段，智能追问 |
-| 👨‍👩‍👧 家庭画像 | `family_profile/family_profile.py` | 管理家庭消费特征 |
-| 💡 推荐 | `recommendation/recommender.py` | 生成选购建议 |
-| 📝 记忆 | `memory/consumption_memory.py` | 记录消费历史 |
-
-## 🎯 功能特性
-
-- **意图识别** - 从自然对话中提取消费意图
-- **智能追问** - 信息不完整时自动追问
-- **预算预测** - 根据家庭画像预测合理预算
-- **多家庭支持** - 管理多个家庭成员
-- **记忆存储** - 记录消费历史，持续优化
-
-## 📊 消费意图结构
+## 🎯 消费意图结构
 
 ### 必填字段
 
@@ -55,14 +39,6 @@ family_consumption_intent/
 |------|------|------|
 | `target` | 消费对象 | 自己、孩子、父母、家庭 |
 | `object` | 商品 | 手机、电脑、空调 |
-
-### 可选字段（自动识别）
-
-| 字段 | 说明 | 来源 |
-|------|------|------|
-| `intent_type` | 商品类别 | 自动识别 |
-| `scene` | 使用场景 | 自动预测 |
-| `budget` | 预算范围 | 家庭画像预测 |
 
 ### 消费类型
 
@@ -76,7 +52,6 @@ family_consumption_intent/
 | `daily` | 日用品 |
 | `entertainment` | 娱乐 |
 | `health` | 医疗保健 |
-| `service` | 服务 |
 
 ## 🔄 工作流程
 
@@ -108,7 +83,7 @@ openclaw start
 
 ## 👨‍👩‍👧 家庭画像配置
 
-### 用户配置 (USER/USER_{userId}.md)
+### 用户配置 (USER/USER_*.md)
 
 ```yaml
 family_id: family_1
@@ -127,11 +102,6 @@ has_child: true
 | 适度 | 3000-5000 | 4000-6000 | 200-500 |
 | 大方 | 5000-8000 | 6000-10000 | 500-1000 |
 | 奢侈 | 10000+ | 10000+ | 1000+ |
-
-## ⚠️ 追问规则
-
-- 追问时只显示问题，不显示选项列表
-- 追问优先级：消费对象 > 商品
 
 ## 📝 输出示例
 
@@ -154,12 +124,19 @@ has_child: true
 - 建议到正规渠道购买
 ```
 
+## ⚠️ 追问规则
+
+- 追问时只显示问题，不显示选项列表
+- 追问优先级：消费对象 > 商品
+
 ## 🛠️ 技术栈
 
-- **运行时**: OpenClaw
-- **消息通道**: 飞书
-- **语言**: Python 3
-- **模型**: MiniMax
+| 技术 | 说明 |
+|------|------|
+| 运行时 | OpenClaw |
+| 消息通道 | 飞书 |
+| 语言 | Python 3 |
+| 模型 | MiniMax |
 
 ## 📄 许可证
 
