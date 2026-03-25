@@ -1,151 +1,142 @@
-# 🏠 家庭消费意图识别系统
+# 🏠 家庭消费意图识别 Agent
 
-智能识别家庭消费意图，支持 LLM 驱动和规则匹配双模式。
+通过对话识别家庭成员消费意图的 AI Agent，支持意图补全、预算预测和个性化推荐。
 
 ## ✨ 功能特性
 
 | 功能 | 说明 |
 |------|------|
-| 🎯 意图识别 | 智能识别消费意图 |
-| 🤖 LLM 驱动 | 支持 MiniMax 大模型 |
-| 📷 图片 OCR | 支持图片识别消费意图 |
-| 🏠 家庭画像 | 个性化用户画像 |
-| 💬 LLM 对话 | AI 助手对话功能 |
-| 💡 消费建议 | 基于画像的个性化建议 |
-
-## 🚀 快速开始
-
-### 1. 安装依赖
-
-```bash
-# 创建虚拟环境（推荐）
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate  # Windows
-
-# 安装依赖
-pip install -r requirements.txt
-```
-
-**OCR 额外依赖：**
-- macOS: `brew install tesseract`
-- Ubuntu/Debian: `sudo apt install tesseract-ocr`
-
-### 2. 启动服务
-
-```bash
-python3 api.py
-```
-
-访问地址：
-- API: http://localhost:5000
-- 意图识别: http://localhost:5000/intent
-- 家庭画像: http://localhost:5000/profile
-- LLM 对话: http://localhost:5000/chat
-
-### 3. 启动 Web 前端
-
-```bash
-# 方法1: 直接打开 HTML 文件
-# family-intent-frontend.html
-
-# 方法2: 使用 HTTP 服务器
-python3 -m http.server 8080
-# 浏览器访问: http://localhost:8080/family-intent-frontend.html
-```
-
-### 4. 局域网访问
-
-```bash
-hostname -I | awk '{print $1}'
-# 访问: http://<IP>:8080/family-intent-frontend.html
-```
-
-## 📡 API 示例
-
-### 意图识别
-
-```bash
-curl -X POST http://localhost:5000/intent \
-  -H "Content-Type: application/json" \
-  -d '{"text":"想买一台电脑"}'
-```
-
-返回：
-```json
-{
-  "intent": true,
-  "category": "数码产品",
-  "target": "电脑",
-  "scenario": "自用",
-  "budget": "",
-  "time": "",
-  "location": "",
-  "user_profile": "收入低，消费节俭...",
-  "motivation": ""
-}
-```
-
-### 设置家庭画像
-
-```bash
-curl -X POST http://localhost:5000/profile \
-  -H "Content-Type: application/json" \
-  -d '{
-    "family_name": "吴海超家",
-    "members": ["爸爸", "妈妈"],
-    "income_level": "高",
-    "spending_habit": "中等",
-    "has_child": true
-  }'
-```
-
-### LLM 对话
-
-```bash
-curl -X POST http://localhost:5000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message":"推荐一款手机"}'
-```
-
-### 图片识别
-
-```bash
-curl -X POST http://localhost:5000/intent/image \
-  -H "Content-Type: application/json" \
-  -d '{"image":"base64_encoded_image_data"}'
-```
-
-## ⚙️ 配置 LLM
-
-修改 `intent_classifier.py`：
-
-```python
-LLM_API_URL = "https://api.minimaxi.com/v1/text/chatcompletion_v2"
-LLM_MODEL = "abab6.5s-chat"
-LLM_API_KEY = "your-api-key"
-```
+| 🎯 意图识别 | 从自然对话中提取消费意图 |
+| 💬 智能追问 | 信息不完整时自动追问确认 |
+| 💰 预算预测 | 根据家庭画像预测合理预算 |
+| 👨‍👩‍👧 多家庭支持 | 管理多个家庭成员 |
+| 📝 记忆存储 | 记录消费历史，持续优化推荐 |
 
 ## 📁 目录结构
 
 ```
-.
-├── api.py                     # Flask API 服务
-├── intent_classifier.py       # 意图识别核心
-├── family_profile.py          # 家庭画像管理
-├── cli.py                     # 命令行工具
-├── family-intent-frontend.html # Web 前端
-└── requirements.txt           # 依赖清单
+family_consumption_intent/
+├── workspace/                      # Agent 工作目录
+│   ├── skills/                    # 技能模块
+│   │   ├── agent.py               # 🧠 主入口
+│   │   ├── intent_detector.py    # 🎯 意图识别
+│   │   ├── slots/                # 槽位填充
+│   │   ├── family_profile/       # 👨‍👩‍👧 家庭画像
+│   │   ├── recommendation/      # 💡 推荐系统
+│   │   └── memory/               # 📝 记忆存储
+│   └── USER/                     # 用户配置
+│
+└── agent-config/                  # 运行时配置
+    ├── agent/                     # 模型配置
+    └── sessions/                  # 会话存储
 ```
 
-## 📦 依赖
+## 🎯 消费意图结构
+
+### 必填字段
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `target` | 消费对象 | 自己、孩子、父母、家庭 |
+| `object` | 商品 | 手机、电脑、空调 |
+
+### 消费类型
+
+| 类型 | 说明 |
+|------|------|
+| `digital` | 数码产品 |
+| `appliance` | 家电 |
+| `education` | 教育学习 |
+| `food` | 食品 |
+| `clothing` | 服装 |
+| `daily` | 日用品 |
+| `entertainment` | 娱乐 |
+| `health` | 医疗保健 |
+
+## 🔄 工作流程
 
 ```
-flask
-flask-cors
-requests
-pytesseract  # 可选
+用户消息 → 意图识别 → 槽位检查 → (追问/输出结果)
+     ↓
+  家庭画像 → 预算预测 → 推荐建议
 ```
+
+## 🚀 快速开始
+
+### 1. 配置飞书机器人
+
+在 OpenClaw 中配置飞书机器人凭证。
+
+### 2. 启动 Agent
+
+```bash
+openclaw start
+```
+
+### 3. 对话示例
+
+| 用户输入 | 识别结果 |
+|----------|----------|
+| 给孩子买手机 | ✅ 消费对象：孩子，商品：手机，预算：5000-8000 |
+| 买空调 | ✅ 消费对象：家庭，商品：空调 |
+| 我想给父母买点东西 | ❓ 想买什么商品？ |
+
+## 👨‍👩‍👧 家庭画像配置
+
+### 用户配置 (USER/USER_*.md)
+
+```yaml
+family_id: family_1
+family_name: 示例家庭
+income_level: 高
+consume_style: 大方
+has_child: true
+```
+
+### 消费风格与预算
+
+| 风格 | 数码 | 家电 | 教育 |
+|------|------|------|------|
+| 节俭 | 1000-2000 | 2000-3000 | 50-100 |
+| 理性 | 2000-4000 | 3000-5000 | 100-300 |
+| 适度 | 3000-5000 | 4000-6000 | 200-500 |
+| 大方 | 5000-8000 | 6000-10000 | 500-1000 |
+| 奢侈 | 10000+ | 10000+ | 1000+ |
+
+## 📝 输出示例
+
+```
+用户：我想换个手机壳
+
+✅ 识别完成！
+- 消费对象：自己
+- 商品：手机壳
+- 类别：日用
+- 场景：日常
+- 预算：-
+- 时间：计划购买
+
+选购建议：
+- 现有手机是 iPhone 14 Pro，需选对应型号
+- 建议选 30-50 元的普通保护壳即可
+- 如追求手感可选 100-200 元品牌壳（Pitaka、Defense）
+- 理性消费：手机壳是消耗品，太贵意义不大
+- 建议到正规渠道购买
+```
+
+## ⚠️ 追问规则
+
+- 追问时只显示问题，不显示选项列表
+- 追问优先级：消费对象 > 商品
+
+## 🛠️ 技术栈
+
+| 技术 | 说明 |
+|------|------|
+| 运行时 | OpenClaw |
+| 消息通道 | 飞书 |
+| 语言 | Python 3 |
+| 模型 | MiniMax |
 
 ## 📄 许可证
 
