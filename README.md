@@ -1,45 +1,43 @@
-# 家庭消费意图识别系统
+# 🏠 家庭消费意图识别系统
 
 智能识别家庭消费意图，支持 LLM 驱动和规则匹配双模式。
 
-## 功能特性
+## ✨ 功能特性
 
-- 🎯 **意图识别** - 智能识别消费意图
-- 🤖 **LLM 驱动** - 支持 MiniMax 大模型
-- 📷 **图片 OCR** - 支持图片识别消费意图
-- 🏠 **家庭画像** - 个性化用户画像
-- 💬 **LLM 对话** - AI 助手对话功能
-- 💡 **消费建议** - 基于画像的个性化建议
+| 功能 | 说明 |
+|------|------|
+| 🎯 意图识别 | 智能识别消费意图 |
+| 🤖 LLM 驱动 | 支持 MiniMax 大模型 |
+| 📷 图片 OCR | 支持图片识别消费意图 |
+| 🏠 家庭画像 | 个性化用户画像 |
+| 💬 LLM 对话 | AI 助手对话功能 |
+| 💡 消费建议 | 基于画像的个性化建议 |
 
-## 快速开始
+## 🚀 快速开始
 
-### 1. 安装依赖 （通过 requirements.txt）
-
- #### 建议先创建并激活虚拟环境（可选但推荐）
-
- ```bash
-  python3 -m venv venv
-  source venv/bin/activate  # macOS/Linux
-  venv\Scripts\activate  # Windows
- ```
-
- #### 安装 requirements.txt 中的所有依赖
- ```bash
-  pip install -r requirements.txt
- ```
-
- OCR 额外系统依赖（仅 Linux/macOS）
- macOS: brew install tesseract
- Ubuntu/Debian: sudo apt install tesseract-ocr
-
-### 2. 启动 API 服务
+### 1. 安装依赖
 
 ```bash
-cd family-intent-recognition-v1.0.2
+# 创建虚拟环境（推荐）
+python3 -m venv venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+**OCR 额外依赖：**
+- macOS: `brew install tesseract`
+- Ubuntu/Debian: `sudo apt install tesseract-ocr`
+
+### 2. 启动服务
+
+```bash
 python3 api.py
 ```
 
-服务启动后访问：
+访问地址：
 - API: http://localhost:5000
 - 意图识别: http://localhost:5000/intent
 - 家庭画像: http://localhost:5000/profile
@@ -49,27 +47,21 @@ python3 api.py
 
 ```bash
 # 方法1: 直接打开 HTML 文件
-# 浏览器访问: file:///path/to/family-intent-frontend.html
+# family-intent-frontend.html
 
 # 方法2: 使用 HTTP 服务器
-cd /path/to/workspace
 python3 -m http.server 8080
 # 浏览器访问: http://localhost:8080/family-intent-frontend.html
 ```
 
 ### 4. 局域网访问
 
-获取本机 IP：
 ```bash
 hostname -I | awk '{print $1}'
+# 访问: http://<IP>:8080/family-intent-frontend.html
 ```
 
-前端访问地址：
-```
-http://192.168.x.x:8080/family-intent-frontend.html
-```
-
-## API 使用
+## 📡 API 示例
 
 ### 意图识别
 
@@ -79,7 +71,7 @@ curl -X POST http://localhost:5000/intent \
   -d '{"text":"想买一台电脑"}'
 ```
 
-返回格式：
+返回：
 ```json
 {
   "intent": true,
@@ -124,9 +116,9 @@ curl -X POST http://localhost:5000/intent/image \
   -d '{"image":"base64_encoded_image_data"}'
 ```
 
-## 配置 LLM
+## ⚙️ 配置 LLM
 
-修改 `intent_classifier.py` 中的配置：
+修改 `intent_classifier.py`：
 
 ```python
 LLM_API_URL = "https://api.minimaxi.com/v1/text/chatcompletion_v2"
@@ -134,26 +126,27 @@ LLM_MODEL = "abab6.5s-chat"
 LLM_API_KEY = "your-api-key"
 ```
 
-## 目录结构
+## 📁 目录结构
 
 ```
-family-intent-recognition-v1.0.2/
+.
 ├── api.py                     # Flask API 服务
 ├── intent_classifier.py       # 意图识别核心
 ├── family_profile.py          # 家庭画像管理
 ├── cli.py                     # 命令行工具
-└── family-intent-frontend.html # Web 前端
+├── family-intent-frontend.html # Web 前端
+└── requirements.txt           # 依赖清单
 ```
 
-## 依赖
+## 📦 依赖
 
-```bash
-pip install flask flask-cors requests
-# OCR 支持（可选）
-pip install pytesseract
-sudo apt install tesseract-ocr
+```
+flask
+flask-cors
+requests
+pytesseract  # 可选
 ```
 
-## 许可证
+## 📄 许可证
 
 MIT
